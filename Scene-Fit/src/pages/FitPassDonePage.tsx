@@ -2,12 +2,12 @@ import { useNavigate } from 'react-router-dom'
 import { ProductMini } from '../components/ProductCard'
 import { useFlow } from '../context/FlowContext'
 import { EXPERIENCE_LABEL, STORES } from '../data/labels'
-import { getColor, getProduct } from '../data/products'
+import { getColor } from '../data/products'
 
 export function FitPassDonePage() {
   const navigate = useNavigate()
-  const { selectedProductId, selectedColorId, fitPass, fitPassStatus, resetFlow } = useFlow()
-  const product = getProduct(selectedProductId ?? '')
+  const { selectedProduct, selectedColorId, fitPass, fitPassStatus, resetFlow } = useFlow()
+  const product = selectedProduct
   const store = STORES.find((item) => item.id === fitPass.storeId)
 
   if (!product) return null

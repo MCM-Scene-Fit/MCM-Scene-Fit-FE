@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
-import { useFlow } from '../context/FlowContext'
+import { useFlowStore } from '../store/useFlowStore'
 
 export function AppShell() {
   return (
@@ -13,8 +13,8 @@ export function AppShell() {
 }
 
 export function RequireProduct({ children }: { children: ReactNode }) {
-  const { selectedProductId } = useFlow()
-  if (!selectedProductId) {
+  const selectedProduct = useFlowStore((state) => state.selectedProduct)
+  if (!selectedProduct) {
     return <Navigate to="/products" replace />
   }
   return children
