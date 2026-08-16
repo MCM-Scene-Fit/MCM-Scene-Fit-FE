@@ -226,8 +226,7 @@ p {
 }
 
 .chip.is-on,
-.choice.is-on,
-.product-card.is-selected {
+.choice.is-on {
   border-color: var(--ink);
   background: var(--ink);
   color: var(--white);
@@ -249,30 +248,86 @@ p {
 }
 
 .product-card {
-  display: grid;
-  grid-template-columns: 92px 1fr;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   overflow: hidden;
+}
+
+.product-card.is-selected {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+
+.product-card__badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  background: var(--ink);
+  color: var(--white);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.product-card__hit {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: transparent;
   text-align: left;
   cursor: pointer;
   padding: 0;
+  color: inherit;
 }
 
 .product-card__visual,
 .product-mini__visual {
   display: grid;
   place-items: center;
-  padding: 10px;
+  background: #f4eee6;
 }
 
-.product-card svg,
-.product-mini svg,
-.bag-layer svg {
+.product-card__visual {
+  aspect-ratio: 4 / 5;
+  width: 100%;
+  padding: 12px 14px;
+}
+
+.product-card__bag {
+  display: grid;
+  place-items: center;
+  width: calc(var(--bag-scale, 1) * 88%);
+  height: calc(var(--bag-scale, 1) * 88%);
+}
+
+.product-mini__visual {
   width: 72px;
   height: 72px;
+  padding: 6px;
+}
+
+.product-card__bag img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.product-mini__visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .product-card__body {
-  padding: 12px 12px 12px 0;
+  padding: 8px 12px 8px;
 }
 
 .product-card h3,
@@ -281,9 +336,44 @@ p {
   font-size: clamp(18px, 1.6vw, 22px);
 }
 
+.product-card h3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.4em;
+}
+
+.product-card__body .muted {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-card__wear {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .price {
   margin-top: 6px;
   font-weight: 700;
+}
+
+.product-card__colors {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding: 0 12px 12px;
+}
+
+.product-card__official {
+  margin-left: auto;
+  padding: 0;
+  font-size: 12px;
+  text-align: right;
 }
 
 .product-mini {
@@ -292,6 +382,54 @@ p {
   gap: 10px;
   padding: 10px;
   align-items: center;
+}
+
+.filters {
+  margin-bottom: 20px;
+  padding: 14px 16px 8px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.filters__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.filters__reset {
+  padding: 0;
+  white-space: nowrap;
+}
+
+.filter-chips {
+  margin: 4px 0 12px;
+}
+
+.chip-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(17, 17, 17, 0.18);
+}
+
+.sticky-select {
+  display: grid;
+  gap: 8px;
+}
+
+.sticky-select__info {
+  font-size: 13px;
 }
 
 .sticky-bar {
@@ -368,9 +506,17 @@ p {
 
 .bag-layer {
   position: absolute;
-  width: clamp(72px, 12vw, 120px);
-  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.2));
+  width: clamp(108px, 26vw, 210px);
+  pointer-events: none;
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.28));
   transform-origin: center top;
+}
+
+.bag-layer img {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
 }
 
 .disclaimer,
@@ -588,21 +734,13 @@ p {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .product-card {
-    grid-template-columns: 1fr;
-  }
-
-  .product-card__visual {
-    min-height: 150px;
-  }
-
   .product-card__body {
-    padding: 0 16px 16px;
+    padding: 0 16px 8px;
   }
 
-  .product-card svg {
-    width: 96px;
-    height: 96px;
+  .sticky-select {
+    grid-template-columns: 1fr minmax(220px, 320px);
+    align-items: center;
   }
 }
 

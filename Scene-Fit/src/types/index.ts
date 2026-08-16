@@ -30,6 +30,10 @@ export type ProductColor = {
   id: string
   name: string
   hex: string
+  sku: string
+  image: string
+  imageWidth: number
+  imageHeight: number
 }
 
 export type Product = {

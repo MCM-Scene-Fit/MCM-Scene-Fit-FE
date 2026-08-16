@@ -9,9 +9,9 @@ import { evidenceTone, runFitCheck } from '../lib/fitCheck'
 
 export function ResultPage() {
   const navigate = useNavigate()
-  const { selectedProductId, selectedColorId, conditions, conditionsReady, startQuickDemo } =
+  const { selectedProduct, selectedColorId, conditions, conditionsReady, startQuickDemo } =
     useFlow()
-  const product = getProduct(selectedProductId ?? '')
+  const product = selectedProduct
 
   const result = useMemo(() => {
     if (!product) return null

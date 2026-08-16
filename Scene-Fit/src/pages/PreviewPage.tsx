@@ -1,16 +1,16 @@
 import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BagIllustration } from '../components/BagIllustration'
+import { ProductImage } from '../components/ProductImage'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
 import { SILHOUETTES } from '../data/labels'
-import { getColor, getProduct } from '../data/products'
+import { bagPreviewScale, getColor } from '../data/products'
 
 export function PreviewPage() {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const {
-    selectedProductId,
+    selectedProduct,
     selectedColorId,
     previewMode,
     photoUrl,
@@ -23,7 +23,7 @@ export function PreviewPage() {
     setColor,
   } = useFlow()
 
-  const product = getProduct(selectedProductId ?? '')
+  const product = selectedProduct
   if (!product || !selectedColorId) return null
   const color = getColor(product, selectedColorId)
 
@@ -37,7 +37,7 @@ export function PreviewPage() {
       <StepHeader
         step={2}
         title="내 모습에서 미리 보기"
-        caption="정확한 가상 피팅이 아니라, 크기와 분위기를 가늠하는 미리보기입니다."
+        caption="공식 제품 이미지를 올린 미리보기입니다. 정확한 가상 피팅이 아니라, 크기와 분위기를 가늠하는 단계입니다."
         backTo="/products"
       />
 
@@ -53,10 +53,10 @@ export function PreviewPage() {
             style={{
               left: `${bag.x}%`,
               top: `${bag.y}%`,
-              transform: `scale(${bag.scale})`,
+              transform: `scale(${bag.scale * bagPreviewScale(product)})`,
             }}
           >
-            <BagIllustration wear={product.wearStyles[0]} color={color.hex} />
+            <ProductImage product={product} colorId={color.id} decorative />
           </div>
         </div>
 

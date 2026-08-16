@@ -9,8 +9,8 @@ import { runFitCheck } from '../lib/fitCheck'
 
 export function ComparePage() {
   const navigate = useNavigate()
-  const { selectedProductId, selectedColorId, conditions, selectProduct } = useFlow()
-  const selected = getProduct(selectedProductId ?? '')
+  const { selectedProduct, selectedColorId, conditions, selectProduct } = useFlow()
+  const selected = selectedProduct
 
   const result = useMemo(() => {
     if (!selected) return null

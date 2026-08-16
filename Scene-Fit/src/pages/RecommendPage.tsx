@@ -131,8 +131,8 @@ export function RecommendPage() {
             <ProductCard
               key={product.id}
               product={product}
-              onSelect={() => {
-                selectProduct(product.id)
+              onSelect={(productId, colorId) => {
+                selectProduct(productId, colorId)
                 setConditions(draft)
                 navigate('/preview')
               }}
