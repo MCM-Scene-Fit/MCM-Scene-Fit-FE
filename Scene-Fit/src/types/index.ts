@@ -85,10 +85,13 @@ export type ItemVerdict = {
   message: string
 }
 
+export const AXIS_STATUSES = ['match', 'check', 'weak'] as const
+export type AxisStatus = (typeof AXIS_STATUSES)[number]
+
 export type FitResult = {
-  sceneMatch: { headline: string; detail: string; positive: boolean }
-  carryCheck: { headline: string; items: ItemVerdict[] }
-  rewearPotential: { headline: string; detail: string; positive: boolean }
+  sceneMatch: { headline: string; detail: string; positive: boolean; status: AxisStatus }
+  carryCheck: { headline: string; items: ItemVerdict[]; status: AxisStatus }
+  rewearPotential: { headline: string; detail: string; positive: boolean; status: AxisStatus }
   matches: string[]
   mismatches: string[]
   storeChecks: string[]
