@@ -1,72 +1,99 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ProductCard } from '../components/ProductCard'
+import { ProductFilters } from '../components/ProductFilters'
 import { StepHeader, StickyBar } from '../components/StepHeader'
-import { useFlow } from '../context/FlowContext'
-import { WEAR_LABEL } from '../data/labels'
+import { formatPrice } from '../data/labels'
 import { PRODUCTS } from '../data/products'
-import type { WearStyle } from '../types'
-
-const FILTERS: Array<{ id: 'all' | WearStyle; label: string }> = [
-  { id: 'all', label: '전체' },
-  { id: 'crossbody', label: WEAR_LABEL.crossbody },
-  { id: 'tote', label: WEAR_LABEL.tote },
-  { id: 'shoulder', label: WEAR_LABEL.shoulder },
-  { id: 'backpack', label: WEAR_LABEL.backpack },
-]
+import {
+  DEFAULT_PRODUCT_FILTERS,
+  filterProducts,
+  type ProductFilterState,
+} from '../lib/productFilters'
+import { useFlowStore } from '../store/useFlowStore'
 
 export function ProductsPage() {
   const navigate = useNavigate()
-  const { selectedProductId, selectProduct } = useFlow()
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]['id']>('all')
+  const selectedProduct = useFlowStore((state) => state.selectedProduct)
+  const selectedColorId = useFlowStore((state) => state.selectedColorId)
+  const selectProduct = useFlowStore((state) => state.selectProduct)
+  const [filters, setFilters] = useState<ProductFilterState>(DEFAULT_PRODUCT_FILTERS)
 
-  const products = useMemo(() => {
-    if (filter === 'all') return PRODUCTS
-    return PRODUCTS.filter((product) => product.wearStyles.includes(filter))
-  }, [filter])
+  const products = useMemo(
+    () => filterProducts(PRODUCTS, filters),
+    [filters],
+  )
+
+  const selectedInView = products.some((product) => product.id === selectedProduct?.id)
+
+  const goPreview = () => {
+    if (!selectedProduct) return
+    navigate('/preview')
+  }
 
   return (
     <main className="page has-sticky">
       <StepHeader
         step={1}
         title="원하는 제품을 선택하세요"
-        caption="공식 정보가 있는 가방 10개로 시작합니다."
+        caption="공식몰에서 검수한 MCM 가방 10개입니다. 형태·색상·가격으로 좁힌 뒤 한 개를 고르세요."
         backTo="/"
       />
 
-      <div className="chip-row">
-        {FILTERS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`chip ${filter === item.id ? 'is-on' : ''}`}
-            onClick={() => setFilter(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
+      <ProductFilters
+        filters={filters}
+        total={PRODUCTS.length}
+        shown={products.length}
+        onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+        onReset={() => setFilters(DEFAULT_PRODUCT_FILTERS)}
+      />
 
-      <div className="product-grid">
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            selected={selectedProductId === product.id}
-            onSelect={() => selectProduct(product.id)}
-          />
-        ))}
-      </div>
+      {products.length === 0 ? (
+        <p className="empty-note">
+          선택한 필터에 맞는 가방이 없습니다. 형태나 가격 조건을 넓혀 보세요.
+        </p>
+      ) : (
+        <div className="product-grid">
+          {products.map((product) => {
+            const isSelected = selectedProduct?.id === product.id
+            return (
+              <ProductCard
+                key={product.id}
+                product={product}
+                selected={isSelected}
+                colorId={isSelected ? selectedColorId ?? undefined : undefined}
+                onSelect={selectProduct}
+              />
+            )
+          })}
+        </div>
+      )}
 
       <StickyBar>
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={!selectedProductId}
-          onClick={() => navigate('/preview')}
-        >
-          내 모습에서 미리 보기
-        </button>
+        <div className="sticky-select">
+          <p className="sticky-select__info">
+            {selectedProduct ? (
+              <>
+                <strong>{selectedProduct.name}</strong>
+                <span className="muted">
+                  {' '}
+                  {formatPrice(selectedProduct.price)}
+                  {selectedInView ? '' : ' · 현재 필터 밖'}
+                </span>
+              </>
+            ) : (
+              <span className="muted">가방을 하나 선택하면 미리보기로 이동합니다.</span>
+            )}
+          </p>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!selectedProduct}
+            onClick={goPreview}
+          >
+            내 모습에서 미리 보기
+          </button>
+        </div>
       </StickyBar>
     </main>
   )

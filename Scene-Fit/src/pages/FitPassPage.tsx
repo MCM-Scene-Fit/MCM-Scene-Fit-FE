@@ -12,7 +12,7 @@ const EXPERIENCES = Object.keys(EXPERIENCE_LABEL) as FitPassExperience[]
 export function FitPassPage() {
   const navigate = useNavigate()
   const {
-    selectedProductId,
+    selectedProduct,
     selectedColorId,
     conditions,
     fitPass,
@@ -20,7 +20,7 @@ export function FitPassPage() {
     toggleExperience,
     submitFitPass,
   } = useFlow()
-  const product = getProduct(selectedProductId ?? '')
+  const product = selectedProduct
   const result = product ? runFitCheck(product, conditions) : null
   const alternative = result?.alternativeId ? getProduct(result.alternativeId) : null
   const ready = Boolean(fitPass.storeId && fitPass.experiences.length)

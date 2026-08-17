@@ -1,4 +1,6 @@
 import type {
+  AxisStatus,
+  BodyBuild,
   EvidenceLevel,
   FitPassExperience,
   ItemId,
@@ -15,10 +17,38 @@ export const SCENE_LABEL: Record<Scene, string> = {
   daily: '데일리',
 }
 
+export const SCENE_ICON: Record<Scene, string> = {
+  travel: '🧳',
+  work: '💼',
+  culture: '🖼️',
+  meetup: '🥂',
+  daily: '☀️',
+}
+
+export const SCENE_HINT: Record<Scene, string> = {
+  travel: '이동이 많고 수납이 중요한 날',
+  work: '출퇴근과 미팅을 오가는 날',
+  culture: '전시·공연을 가볍게 즐기는 날',
+  meetup: '약속과 모임이 있는 날',
+  daily: '평소 외출과 가까운 이동',
+}
+
 export const MOBILITY_LABEL: Record<Mobility, string> = {
   indoor: '실내 중심',
   'light-walk': '가벼운 도보',
   'long-walk': '오래 걷기',
+}
+
+export const MOBILITY_ICON: Record<Mobility, string> = {
+  indoor: '🏛️',
+  'light-walk': '🚶',
+  'long-walk': '🗺️',
+}
+
+export const MOBILITY_HINT: Record<Mobility, string> = {
+  indoor: '카페·실내 이동이 대부분인 날',
+  'light-walk': '짧은 거리를 걸어 다니는 날',
+  'long-walk': '오래 걷거나 대중교통이 많은 날',
 }
 
 export const WEAR_LABEL: Record<WearStyle, string> = {
@@ -26,6 +56,20 @@ export const WEAR_LABEL: Record<WearStyle, string> = {
   shoulder: '숄더',
   crossbody: '크로스바디',
   backpack: '백팩',
+}
+
+export const WEAR_ICON: Record<WearStyle, string> = {
+  tote: '🛍️',
+  shoulder: '👛',
+  crossbody: '👜',
+  backpack: '🎒',
+}
+
+export const WEAR_HINT: Record<WearStyle, string> = {
+  tote: '손에 들거나 팔에 거는 여유로운 형태',
+  shoulder: '한쪽 어깨에 걸쳐 가볍게 메는 형태',
+  crossbody: '양손이 자유롭고 오래 걷기 좋음',
+  backpack: '무게를 분산해 장거리 이동에 편함',
 }
 
 export const ITEM_LABEL: Record<ItemId, string> = {
@@ -38,11 +82,27 @@ export const ITEM_LABEL: Record<ItemId, string> = {
   bottle: '350mL 물병',
 }
 
+export const ITEM_ICON: Record<ItemId, string> = {
+  phone: '📱',
+  wallet: '💳',
+  pouch: '👝',
+  tablet: '📲',
+  laptop13: '💻',
+  camera: '📷',
+  bottle: '💧',
+}
+
 export const EVIDENCE_LABEL: Record<EvidenceLevel, string> = {
   confirmed: '확인됨',
   estimated: '예상됨',
   'store-check': '매장 확인 필요',
   unlikely: '어려움',
+}
+
+export const AXIS_STATUS_LABEL: Record<AxisStatus, string> = {
+  match: '맞음',
+  check: '확인 필요',
+  weak: '약함',
 }
 
 export const EXPERIENCE_LABEL: Record<FitPassExperience, string> = {
@@ -60,11 +120,11 @@ export const STORES = [
   { id: 'mcm-cheongdam', name: 'MCM 청담 플래그십' },
 ] as const
 
-export const SILHOUETTES = [
-  { id: 's160', label: '키 160cm 전후', hint: '슬림 실루엣' },
-  { id: 's165', label: '키 165cm 전후', hint: '스탠다드 실루엣' },
-  { id: 's170', label: '키 170cm 전후', hint: '롱 실루엣' },
-] as const
+export const BUILD_LABEL: Record<BodyBuild, string> = {
+  slim: '슬림',
+  standard: '스탠다드',
+  broad: '볼륨',
+}
 
 export function formatPrice(price: number) {
   return `₩${price.toLocaleString('ko-KR')}`

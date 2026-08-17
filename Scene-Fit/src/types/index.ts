@@ -30,6 +30,10 @@ export type ProductColor = {
   id: string
   name: string
   hex: string
+  sku: string
+  image: string
+  imageWidth: number
+  imageHeight: number
 }
 
 export type Product = {
@@ -67,16 +71,27 @@ export type Conditions = {
 
 export type PreviewMode = 'photo' | 'silhouette'
 
+export const BUILDS = ['slim', 'standard', 'broad'] as const
+export type BodyBuild = (typeof BUILDS)[number]
+
+export type BodyProfile = {
+  heightCm: number
+  build: BodyBuild
+}
+
 export type ItemVerdict = {
   item: ItemId
   level: EvidenceLevel
   message: string
 }
 
+export const AXIS_STATUSES = ['match', 'check', 'weak'] as const
+export type AxisStatus = (typeof AXIS_STATUSES)[number]
+
 export type FitResult = {
-  sceneMatch: { headline: string; detail: string; positive: boolean }
-  carryCheck: { headline: string; items: ItemVerdict[] }
-  rewearPotential: { headline: string; detail: string; positive: boolean }
+  sceneMatch: { headline: string; detail: string; positive: boolean; status: AxisStatus }
+  carryCheck: { headline: string; items: ItemVerdict[]; status: AxisStatus }
+  rewearPotential: { headline: string; detail: string; positive: boolean; status: AxisStatus }
   matches: string[]
   mismatches: string[]
   storeChecks: string[]

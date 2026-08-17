@@ -1,31 +1,36 @@
 import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BagIllustration } from '../components/BagIllustration'
 import { StepHeader, StickyBar } from '../components/StepHeader'
+import { WearPreview } from '../components/WearPreview'
 import { useFlow } from '../context/FlowContext'
-import { SILHOUETTES } from '../data/labels'
-import { getColor, getProduct } from '../data/products'
+import { BUILD_LABEL, WEAR_LABEL } from '../data/labels'
+import { getColor } from '../data/products'
+import { HEIGHT_MAX_CM, HEIGHT_MIN_CM } from '../lib/previewFit'
+import { BUILDS } from '../types'
 
 export function PreviewPage() {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const {
-    selectedProductId,
+    selectedProduct,
     selectedColorId,
     previewMode,
     photoUrl,
-    silhouetteId,
+    body,
     bag,
+    conditions,
     setPreviewMode,
     setPhotoUrl,
-    setSilhouetteId,
+    setBody,
     setBag,
+    setConditions,
     setColor,
   } = useFlow()
 
-  const product = getProduct(selectedProductId ?? '')
+  const product = selectedProduct
   if (!product || !selectedColorId) return null
   const color = getColor(product, selectedColorId)
+  const wearStyle = conditions.wearStyle ?? product.wearStyles[0]
 
   const onUpload = (file: File | undefined) => {
     if (!file) return
@@ -37,47 +42,38 @@ export function PreviewPage() {
       <StepHeader
         step={2}
         title="내 모습에서 미리 보기"
-        caption="정확한 가상 피팅이 아니라, 크기와 분위기를 가늠하는 미리보기입니다."
+        caption="실제 키를 입력하면, 공식 치수 비율로 가방 크기가 고정됩니다."
         backTo="/products"
       />
 
       <div className="preview-layout">
-        <div className="preview-stage">
-          {previewMode === 'photo' && photoUrl ? (
-            <img src={photoUrl} alt="업로드한 전신 사진" className="preview-photo" />
-          ) : (
-            <SilhouetteFigure id={silhouetteId} />
-          )}
-          <div
-            className="bag-layer"
-            style={{
-              left: `${bag.x}%`,
-              top: `${bag.y}%`,
-              transform: `scale(${bag.scale})`,
-            }}
-          >
-            <BagIllustration wear={product.wearStyles[0]} color={color.hex} />
-          </div>
-        </div>
+        <WearPreview
+          product={product}
+          colorId={color.id}
+          mode={previewMode}
+          photoUrl={photoUrl}
+          body={body}
+          wearStyle={wearStyle}
+          bag={bag}
+          onBagChange={setBag}
+          onUploadClick={() => inputRef.current?.click()}
+        />
 
         <div className="preview-controls">
           <div className="segment">
             <button
               type="button"
-              className={previewMode === 'silhouette' ? 'is-on' : ''}
-              onClick={() => setPreviewMode('silhouette')}
+              className={previewMode === 'photo' ? 'is-on' : ''}
+              onClick={() => setPreviewMode('photo')}
             >
-              준비된 실루엣
+              내 사진 올리기
             </button>
             <button
               type="button"
-              className={previewMode === 'photo' ? 'is-on' : ''}
-              onClick={() => {
-                if (photoUrl) setPreviewMode('photo')
-                else inputRef.current?.click()
-              }}
+              className={previewMode === 'silhouette' ? 'is-on' : ''}
+              onClick={() => setPreviewMode('silhouette')}
             >
-              내 전신 사진
+              실루엣으로 보기
             </button>
           </div>
           <input
@@ -85,30 +81,84 @@ export function PreviewPage() {
             type="file"
             accept="image/*"
             hidden
-            onChange={(event) => onUpload(event.target.files?.[0])}
+            onChange={(event) => {
+              onUpload(event.target.files?.[0])
+              event.currentTarget.value = ''
+            }}
           />
-          {photoUrl ? (
-            <button type="button" className="text-btn" onClick={() => inputRef.current?.click()}>
-              사진 다시 고르기
-            </button>
-          ) : null}
+          {previewMode === 'photo' ? (
+            <>
+              <button type="button" className="text-btn" onClick={() => inputRef.current?.click()}>
+                {photoUrl ? '사진 다시 고르기' : '전신 사진 선택'}
+              </button>
+              <label className="slider">
+                <span>내 키 {body.heightCm}cm</span>
+                <input
+                  type="range"
+                  min={HEIGHT_MIN_CM}
+                  max={HEIGHT_MAX_CM}
+                  step="1"
+                  value={body.heightCm}
+                  onChange={(event) => setBody({ heightCm: Number(event.target.value) })}
+                />
+              </label>
+              <p className="muted preview-note">
+                내 키를 바꾸면 가방 크기도 함께 바뀝니다. 실제 치수 가방을 메었을 때의 비율을
+                보기 위함입니다.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="muted preview-note">
+                키를 바꾸면 사람과 가방 비율이 함께 바뀝니다. 실제 치수 가방을 메었을 때의
+                비율을 보기 위함입니다.
+              </p>
 
-          {previewMode === 'silhouette' ? (
-            <div className="chip-row">
-              {SILHOUETTES.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`chip ${silhouetteId === item.id ? 'is-on' : ''}`}
-                  onClick={() => setSilhouetteId(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
+              <label className="slider">
+                <span>실루엣 키 {body.heightCm}cm</span>
+                <input
+                  type="range"
+                  min={HEIGHT_MIN_CM}
+                  max={HEIGHT_MAX_CM}
+                  step="1"
+                  value={body.heightCm}
+                  onChange={(event) => setBody({ heightCm: Number(event.target.value) })}
+                />
+              </label>
 
-          <p className="disclaimer">실제 제품 크기와 착용감은 매장에서 확인이 필요합니다.</p>
+              <p className="field-label">체형</p>
+              <div className="chip-row">
+                {BUILDS.map((build) => (
+                  <button
+                    key={build}
+                    type="button"
+                    className={`chip ${body.build === build ? 'is-on' : ''}`}
+                    onClick={() => setBody({ build })}
+                  >
+                    {BUILD_LABEL[build]}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          <p className="field-label">착용 위치</p>
+          <div className="chip-row">
+            {product.wearStyles.map((wear) => (
+              <button
+                key={wear}
+                type="button"
+                className={`chip ${wearStyle === wear ? 'is-on' : ''}`}
+                onClick={() => setConditions({ wearStyle: wear })}
+              >
+                {WEAR_LABEL[wear]}
+              </button>
+            ))}
+          </div>
+
+          <p className="disclaimer">
+            대략적인 비율 확인용이며 실제 착용감은 매장 확인이 필요합니다
+          </p>
 
           <div className="color-row">
             {product.colors.map((item) => (
@@ -123,38 +173,6 @@ export function PreviewPage() {
             ))}
             <span className="muted">{color.name}</span>
           </div>
-
-          <label className="slider">
-            <span>가방 크기</span>
-            <input
-              type="range"
-              min="0.7"
-              max="1.4"
-              step="0.02"
-              value={bag.scale}
-              onChange={(event) => setBag({ scale: Number(event.target.value) })}
-            />
-          </label>
-          <label className="slider">
-            <span>좌우 위치</span>
-            <input
-              type="range"
-              min="0"
-              max="55"
-              value={bag.x}
-              onChange={(event) => setBag({ x: Number(event.target.value) })}
-            />
-          </label>
-          <label className="slider">
-            <span>높이</span>
-            <input
-              type="range"
-              min="18"
-              max="62"
-              value={bag.y}
-              onChange={(event) => setBag({ y: Number(event.target.value) })}
-            />
-          </label>
         </div>
       </div>
 
@@ -164,17 +182,5 @@ export function PreviewPage() {
         </button>
       </StickyBar>
     </main>
-  )
-}
-
-function SilhouetteFigure({ id }: { id: string }) {
-  const height = id === 's160' ? 86 : id === 's170' ? 96 : 91
-  return (
-    <svg viewBox="0 0 120 160" className="silhouette" aria-hidden="true">
-      <circle cx="60" cy="28" r="14" />
-      <rect x="42" y="44" width="36" height="52" rx="16" />
-      <rect x="46" y="94" width="12" height={`${height - 70}`} rx="6" />
-      <rect x="62" y="94" width="12" height={`${height - 70}`} rx="6" />
-    </svg>
   )
 }
