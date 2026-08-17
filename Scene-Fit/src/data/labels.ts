@@ -1,4 +1,5 @@
 import type {
+  BodyBuild,
   EvidenceLevel,
   FitPassExperience,
   ItemId,
@@ -60,11 +61,11 @@ export const STORES = [
   { id: 'mcm-cheongdam', name: 'MCM 청담 플래그십' },
 ] as const
 
-export const SILHOUETTES = [
-  { id: 's160', label: '키 160cm 전후', hint: '슬림 실루엣' },
-  { id: 's165', label: '키 165cm 전후', hint: '스탠다드 실루엣' },
-  { id: 's170', label: '키 170cm 전후', hint: '롱 실루엣' },
-] as const
+export const BUILD_LABEL: Record<BodyBuild, string> = {
+  slim: '슬림',
+  standard: '스탠다드',
+  broad: '볼륨',
+}
 
 export function formatPrice(price: number) {
   return `₩${price.toLocaleString('ko-KR')}`

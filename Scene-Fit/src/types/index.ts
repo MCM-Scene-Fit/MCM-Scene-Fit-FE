@@ -71,6 +71,14 @@ export type Conditions = {
 
 export type PreviewMode = 'photo' | 'silhouette'
 
+export const BUILDS = ['slim', 'standard', 'broad'] as const
+export type BodyBuild = (typeof BUILDS)[number]
+
+export type BodyProfile = {
+  heightCm: number
+  build: BodyBuild
+}
+
 export type ItemVerdict = {
   item: ItemId
   level: EvidenceLevel

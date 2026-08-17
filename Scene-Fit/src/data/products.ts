@@ -286,11 +286,6 @@ export function getColor(product: Product, colorId: string) {
   return product.colors.find((color) => color.id === colorId) ?? product.colors[0]
 }
 
-/** 공식 세로 치수를 미리보기 기본 크기에 반영한다. 사용자가 슬라이더로 다시 조절할 수 있다. */
-export function bagPreviewScale(product: Product) {
-  return Math.min(1.42, Math.max(0.58, product.heightMm / 300))
-}
-
 /** 카드 안에서 다른 가방과 같은 기준으로 상대 크기를 맞춘다. */
 export function bagCardScale(product: Product) {
   const largest = Math.max(...PRODUCTS.map((item) => Math.max(item.widthMm, item.heightMm)))

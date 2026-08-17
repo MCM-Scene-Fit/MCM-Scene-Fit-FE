@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { getProduct, PRODUCTS } from '../data/products'
+import { silhouetteBagAnchor } from '../lib/wearAnchor'
 import type {
+  BodyProfile,
   Conditions,
   FitPassDraft,
   FitPassExperience,
@@ -14,7 +16,6 @@ import type {
 type BagTransform = {
   x: number
   y: number
-  scale: number
 }
 
 type FlowState = {
@@ -22,7 +23,7 @@ type FlowState = {
   selectedColorId: string | null
   previewMode: PreviewMode
   photoUrl: string | null
-  silhouetteId: string
+  body: BodyProfile
   bag: BagTransform
   conditions: Conditions
   fitPass: FitPassDraft
@@ -34,7 +35,7 @@ type FlowActions = {
   setColor: (colorId: string) => void
   setPreviewMode: (mode: PreviewMode) => void
   setPhotoUrl: (url: string | null) => void
-  setSilhouetteId: (id: string) => void
+  setBody: (body: Partial<BodyProfile>) => void
   setBag: (bag: Partial<BagTransform>) => void
   setConditions: (patch: Partial<Conditions>) => void
   toggleItem: (item: ItemId) => void
@@ -63,20 +64,23 @@ const defaultFitPass: FitPassDraft = {
   customNote: '',
 }
 
-function wearDefaultBag(wear: WearStyle | null): BagTransform {
-  if (wear === 'backpack') return { x: 28, y: 28, scale: 1.05 }
-  if (wear === 'tote') return { x: 8, y: 46, scale: 1.15 }
-  if (wear === 'shoulder') return { x: 22, y: 34, scale: 1 }
-  return { x: 18, y: 42, scale: 1 }
+function wearDefaultBag(wear: WearStyle | null) {
+  const { x, y } = silhouetteBagAnchor(wear ?? 'crossbody')
+  return { x, y }
+}
+
+const defaultBody: BodyProfile = {
+  heightCm: 165,
+  build: 'standard',
 }
 
 const initialState: FlowState = {
   selectedProduct: null,
   selectedColorId: null,
-  previewMode: 'silhouette',
+  previewMode: 'photo',
   photoUrl: null,
-  silhouetteId: 's165',
-  bag: { x: 18, y: 42, scale: 1 },
+  body: defaultBody,
+  bag: { x: 18, y: 42 },
   conditions: defaultConditions,
   fitPass: defaultFitPass,
   fitPassStatus: null,
@@ -111,7 +115,7 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
     set({ photoUrl: url, previewMode: url ? 'photo' : get().previewMode })
   },
 
-  setSilhouetteId: (id) => set({ silhouetteId: id, previewMode: 'silhouette' }),
+  setBody: (body) => set({ body: { ...get().body, ...body } }),
 
   setBag: (bag) => set({ bag: { ...get().bag, ...bag } }),
 
@@ -155,7 +159,7 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
       selectedColorId: product.colors[0].id,
       previewMode: 'silhouette',
       photoUrl: null,
-      silhouetteId: 's165',
+      body: defaultBody,
       bag: wearDefaultBag('crossbody'),
       conditions: {
         scene: 'travel',
