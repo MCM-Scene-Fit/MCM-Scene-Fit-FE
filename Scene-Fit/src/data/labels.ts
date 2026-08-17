@@ -1,4 +1,5 @@
 import type {
+  AxisStatus,
   BodyBuild,
   EvidenceLevel,
   FitPassExperience,
@@ -96,6 +97,12 @@ export const EVIDENCE_LABEL: Record<EvidenceLevel, string> = {
   estimated: '예상됨',
   'store-check': '매장 확인 필요',
   unlikely: '어려움',
+}
+
+export const AXIS_STATUS_LABEL: Record<AxisStatus, string> = {
+  match: '맞음',
+  check: '확인 필요',
+  weak: '약함',
 }
 
 export const EXPERIENCE_LABEL: Record<FitPassExperience, string> = {

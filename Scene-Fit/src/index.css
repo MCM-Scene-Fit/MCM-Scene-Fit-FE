@@ -429,7 +429,8 @@ p {
 .product-mini,
 .note-card,
 .alt-card,
-.fit-axes article {
+.fit-axes article,
+.axis-card {
   background: var(--white);
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -666,6 +667,7 @@ p {
 .preview-layout,
 .fitpass-layout,
 .result-bottom,
+.result-notes,
 .compare-heads {
   display: grid;
   gap: 16px;
@@ -912,6 +914,7 @@ p {
 }
 
 .fit-axes,
+.result-notes,
 .note-card,
 .alt-card {
   display: grid;
@@ -920,14 +923,92 @@ p {
 }
 
 .fit-axes article,
+.axis-card,
 .note-card,
 .alt-card {
   padding: 16px;
 }
 
-.fit-axes h3 {
+.axis-card {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.axis-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.axis-pill {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.axis-pill--match {
+  background: rgba(47, 107, 79, 0.12);
+  color: var(--ok);
+}
+
+.axis-pill--check {
+  background: rgba(61, 74, 102, 0.12);
+  color: var(--info);
+}
+
+.axis-pill--weak {
+  background: rgba(163, 59, 43, 0.12);
+  color: var(--bad);
+}
+
+.axis-meter {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  height: 6px;
+}
+
+.axis-meter span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--cream-2);
+}
+
+.axis-meter--match span.is-on {
+  background: var(--ok);
+}
+
+.axis-meter--check span.is-on {
+  background: var(--info);
+}
+
+.axis-meter--weak span.is-on {
+  background: var(--bad);
+}
+
+.axis-card--match {
+  border-color: rgba(47, 107, 79, 0.22);
+}
+
+.axis-card--check {
+  border-color: rgba(61, 74, 102, 0.22);
+}
+
+.axis-card--weak {
+  border-color: rgba(163, 59, 43, 0.22);
+}
+
+.fit-axes h3,
+.axis-card h3 {
   font-size: clamp(18px, 1.8vw, 24px);
-  margin: 4px 0 6px;
+  margin: 2px 0 0;
+  line-height: 1.25;
 }
 
 .verdicts {
@@ -959,8 +1040,24 @@ p {
 }
 
 .note-card h4 {
-  margin: 10px 0 6px;
+  margin: 0 0 6px;
   font-size: 16px;
+}
+
+.result-notes .note-card {
+  margin: 0;
+}
+
+.note-card--ok {
+  border-color: rgba(47, 107, 79, 0.22);
+}
+
+.note-card--bad {
+  border-color: rgba(163, 59, 43, 0.22);
+}
+
+.note-card--info {
+  border-color: rgba(61, 74, 102, 0.22);
 }
 
 .note-card ul,
@@ -1027,7 +1124,8 @@ p {
     grid-column: 1 / -1;
   }
 
-  .fit-axes {
+  .fit-axes,
+  .result-notes {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 

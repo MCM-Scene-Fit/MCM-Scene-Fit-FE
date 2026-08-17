@@ -1,11 +1,85 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ProductMini } from '../components/ProductCard'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
-import { EVIDENCE_LABEL, ITEM_LABEL } from '../data/labels'
+import { AXIS_STATUS_LABEL, EVIDENCE_LABEL, ITEM_LABEL } from '../data/labels'
 import { getProduct } from '../data/products'
 import { evidenceTone, runFitCheck } from '../lib/fitCheck'
+import type { AxisStatus } from '../types'
+
+const METER_FILL: Record<AxisStatus, number> = {
+  weak: 1,
+  check: 2,
+  match: 3,
+}
+
+function AxisMeter({ status, label }: { status: AxisStatus; label: string }) {
+  const fill = METER_FILL[status]
+  return (
+    <div
+      className={`axis-meter axis-meter--${status}`}
+      role="meter"
+      aria-label={`${label} ${AXIS_STATUS_LABEL[status]}`}
+      aria-valuemin={1}
+      aria-valuemax={3}
+      aria-valuenow={fill}
+      aria-valuetext={AXIS_STATUS_LABEL[status]}
+    >
+      {[1, 2, 3].map((step) => (
+        <span key={step} className={step <= fill ? 'is-on' : undefined} />
+      ))}
+    </div>
+  )
+}
+
+function AxisCard({
+  label,
+  status,
+  headline,
+  children,
+}: {
+  label: string
+  status: AxisStatus
+  headline: string
+  children: ReactNode
+}) {
+  return (
+    <article className={`axis-card axis-card--${status}`}>
+      <div className="axis-card__top">
+        <p className="eyebrow">{label}</p>
+        <span className={`axis-pill axis-pill--${status}`}>{AXIS_STATUS_LABEL[status]}</span>
+      </div>
+      <AxisMeter status={status} label={label} />
+      <h3>{headline}</h3>
+      {children}
+    </article>
+  )
+}
+
+function NoteCard({
+  tone,
+  eyebrow,
+  title,
+  empty,
+  items,
+}: {
+  tone: 'ok' | 'bad' | 'info'
+  eyebrow: string
+  title: string
+  empty: string
+  items: string[]
+}) {
+  return (
+    <article className={`note-card note-card--${tone}`}>
+      <p className="eyebrow">{eyebrow}</p>
+      <h4>{title}</h4>
+      <ul>
+        {items.length ? items.map((line) => <li key={line}>{line}</li>) : <li>{empty}</li>}
+      </ul>
+    </article>
+  )
+}
 
 export function ResultPage() {
   const navigate = useNavigate()
@@ -38,60 +112,71 @@ export function ResultPage() {
         </p>
       ) : null}
 
-      <section className="fit-axes">
-        <article>
-          <p className="eyebrow">Scene Match</p>
-          <h3>{result.sceneMatch.headline}</h3>
+      <section className="fit-axes" aria-label="3축 적합도">
+        <AxisCard
+          label="Scene Match"
+          status={result.sceneMatch.status}
+          headline={result.sceneMatch.headline}
+        >
           <p className="muted">{result.sceneMatch.detail}</p>
-        </article>
-        <article>
-          <p className="eyebrow">Carry Check</p>
-          <h3>{result.carryCheck.headline}</h3>
-          <ul className="verdicts">
-            {result.carryCheck.items.map((item) => (
-              <li key={item.item} className={evidenceTone(item.level)}>
-                <span>{ITEM_LABEL[item.item]}</span>
-                <b>{EVIDENCE_LABEL[item.level]}</b>
-              </li>
-            ))}
-          </ul>
-        </article>
-        <article>
-          <p className="eyebrow">Rewear Potential</p>
-          <h3>{result.rewearPotential.headline}</h3>
+        </AxisCard>
+        <AxisCard
+          label="Carry Check"
+          status={result.carryCheck.status}
+          headline={result.carryCheck.headline}
+        >
+          {result.carryCheck.items.length ? (
+            <ul className="verdicts">
+              {result.carryCheck.items.map((item) => (
+                <li key={item.item} className={evidenceTone(item.level)}>
+                  <span>{ITEM_LABEL[item.item]}</span>
+                  <b>{EVIDENCE_LABEL[item.level]}</b>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">선택한 소지품이 없으면 매장에서 수납을 확인해 주세요.</p>
+          )}
+        </AxisCard>
+        <AxisCard
+          label="Rewear Potential"
+          status={result.rewearPotential.status}
+          headline={result.rewearPotential.headline}
+        >
           <p className="muted">{result.rewearPotential.detail}</p>
-        </article>
+        </AxisCard>
       </section>
 
-      <div className="result-bottom">
-        <section className="note-card">
-        <h4>이 가방이 잘 맞는 이유</h4>
-        <ul>
-          {result.matches.length ? result.matches.map((line) => <li key={line}>{line}</li>) : (
-            <li>선택한 조건과 강하게 겹치는 공식 근거는 아직 적습니다.</li>
-          )}
-        </ul>
-        <h4>가장 잘 맞지 않는 조건</h4>
-        <ul>
-          {result.mismatches.length ? result.mismatches.map((line) => <li key={line}>{line}</li>) : (
-            <li>필수 조건에서 뚜렷한 불일치는 없습니다.</li>
-          )}
-        </ul>
-        <h4>구매 전에 확인할 점</h4>
-        <ul>
-          {result.storeChecks.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
+      <section className="result-notes" aria-label="결과 요약">
+        <NoteCard
+          tone="ok"
+          eyebrow="잘 맞음"
+          title="이 가방이 잘 맞는 이유"
+          empty="선택한 조건과 강하게 겹치는 공식 근거는 아직 적습니다."
+          items={result.matches}
+        />
+        <NoteCard
+          tone="bad"
+          eyebrow="안 맞음"
+          title="가장 안 맞는 조건"
+          empty="필수 조건에서 뚜렷한 불일치는 없습니다."
+          items={result.mismatches}
+        />
+        <NoteCard
+          tone="info"
+          eyebrow="매장 확인"
+          title="매장에서 확인할 점"
+          empty="지금 단계에서 따로 확인할 항목은 없습니다."
+          items={result.storeChecks}
+        />
       </section>
 
-        {alternative ? (
-          <section className="alt-card">
-            <p className="eyebrow">조건을 바꿨을 때의 대안</p>
-            <ProductMini product={alternative} />
-          </section>
-        ) : null}
-      </div>
+      {alternative ? (
+        <section className="alt-card">
+          <p className="eyebrow">조건을 바꿨을 때의 대안</p>
+          <ProductMini product={alternative} />
+        </section>
+      ) : null}
 
       <StickyBar>
         <div className="btn-row">

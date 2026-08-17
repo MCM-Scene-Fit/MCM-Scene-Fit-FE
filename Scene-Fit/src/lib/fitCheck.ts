@@ -1,6 +1,7 @@
 import { ITEM_LABEL, SCENE_LABEL, WEAR_LABEL } from '../data/labels'
 import { PRODUCTS } from '../data/products'
 import type {
+  AxisStatus,
   Conditions,
   EvidenceLevel,
   FitResult,
@@ -58,6 +59,27 @@ function carryHeadline(items: ItemVerdict[]) {
   return '선택한 소지품은 매장에서 확인이 필요합니다'
 }
 
+function sceneStatus(sceneSelected: boolean, scenePositive: boolean): AxisStatus {
+  if (!sceneSelected) return 'check'
+  return scenePositive ? 'match' : 'weak'
+}
+
+function carryStatus(items: ItemVerdict[], wearOk: boolean, hasWear: boolean): AxisStatus {
+  if (items.some((item) => item.level === 'unlikely') || (hasWear && !wearOk)) {
+    return 'weak'
+  }
+  if (items.length === 0) {
+    return hasWear && wearOk ? 'match' : 'check'
+  }
+  const allConfirmed = items.every((item) => item.level === 'confirmed')
+  if (allConfirmed && (!hasWear || wearOk)) return 'match'
+  return 'check'
+}
+
+function rewearStatus(positive: boolean): AxisStatus {
+  return positive ? 'match' : 'weak'
+}
+
 function findAlternative(product: Product, conditions: Conditions) {
   const wear = conditions.wearStyle
   const items = conditions.items
@@ -91,6 +113,7 @@ export function runFitCheck(product: Product, conditions: Conditions): FitResult
       ? '제품 스타일 태그가 선택한 장면과 맞습니다.'
       : '공식 장면 태그와 선택한 장면이 완전히 겹치지는 않습니다.',
     positive: scenePositive,
+    status: sceneStatus(Boolean(scene), scenePositive),
   }
 
   const itemVerdicts = conditions.items.map((item) => verdictForItem(product, item))
@@ -105,6 +128,7 @@ export function runFitCheck(product: Product, conditions: Conditions): FitResult
         ? `${WEAR_LABEL[conditions.wearStyle]} 착용은 이 제품의 기본 방식이 아닙니다`
         : carryHeadline(itemVerdicts),
     items: itemVerdicts,
+    status: carryStatus(itemVerdicts, wearOk, Boolean(conditions.wearStyle)),
   }
 
   const rewearScene = conditions.rewearScene ?? 'daily'
@@ -117,6 +141,7 @@ export function runFitCheck(product: Product, conditions: Conditions): FitResult
       ? '특별한 일정 이후에도 같은 제품 태그가 이어집니다.'
       : '해당 장면 태그가 약해 매장에서 다른 활용을 상담해 보세요.',
     positive: rewearPositive,
+    status: rewearStatus(rewearPositive),
   }
 
   const matches: string[] = []
