@@ -16,10 +16,38 @@ export const SCENE_LABEL: Record<Scene, string> = {
   daily: '데일리',
 }
 
+export const SCENE_ICON: Record<Scene, string> = {
+  travel: '🧳',
+  work: '💼',
+  culture: '🖼️',
+  meetup: '🥂',
+  daily: '☀️',
+}
+
+export const SCENE_HINT: Record<Scene, string> = {
+  travel: '이동이 많고 수납이 중요한 날',
+  work: '출퇴근과 미팅을 오가는 날',
+  culture: '전시·공연을 가볍게 즐기는 날',
+  meetup: '약속과 모임이 있는 날',
+  daily: '평소 외출과 가까운 이동',
+}
+
 export const MOBILITY_LABEL: Record<Mobility, string> = {
   indoor: '실내 중심',
   'light-walk': '가벼운 도보',
   'long-walk': '오래 걷기',
+}
+
+export const MOBILITY_ICON: Record<Mobility, string> = {
+  indoor: '🏛️',
+  'light-walk': '🚶',
+  'long-walk': '🗺️',
+}
+
+export const MOBILITY_HINT: Record<Mobility, string> = {
+  indoor: '카페·실내 이동이 대부분인 날',
+  'light-walk': '짧은 거리를 걸어 다니는 날',
+  'long-walk': '오래 걷거나 대중교통이 많은 날',
 }
 
 export const WEAR_LABEL: Record<WearStyle, string> = {
@@ -27,6 +55,20 @@ export const WEAR_LABEL: Record<WearStyle, string> = {
   shoulder: '숄더',
   crossbody: '크로스바디',
   backpack: '백팩',
+}
+
+export const WEAR_ICON: Record<WearStyle, string> = {
+  tote: '🛍️',
+  shoulder: '👛',
+  crossbody: '👜',
+  backpack: '🎒',
+}
+
+export const WEAR_HINT: Record<WearStyle, string> = {
+  tote: '손에 들거나 팔에 거는 여유로운 형태',
+  shoulder: '한쪽 어깨에 걸쳐 가볍게 메는 형태',
+  crossbody: '양손이 자유롭고 오래 걷기 좋음',
+  backpack: '무게를 분산해 장거리 이동에 편함',
 }
 
 export const ITEM_LABEL: Record<ItemId, string> = {
@@ -37,6 +79,16 @@ export const ITEM_LABEL: Record<ItemId, string> = {
   laptop13: '13인치 노트북',
   camera: '소형 카메라',
   bottle: '350mL 물병',
+}
+
+export const ITEM_ICON: Record<ItemId, string> = {
+  phone: '📱',
+  wallet: '💳',
+  pouch: '👝',
+  tablet: '📲',
+  laptop13: '💻',
+  camera: '📷',
+  bottle: '💧',
 }
 
 export const EVIDENCE_LABEL: Record<EvidenceLevel, string> = {

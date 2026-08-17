@@ -232,6 +232,194 @@ p {
   color: var(--white);
 }
 
+.wizard {
+  display: grid;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.choice-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.choice-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.choice-grid-2 > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.choice-grid-stack {
+  grid-template-columns: 1fr;
+}
+
+.choice-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 92px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--white);
+  text-align: left;
+  cursor: pointer;
+}
+
+.choice-grid-stack .choice-card {
+  min-height: 104px;
+}
+
+.choice-card__icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--cream-2);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.choice-card__body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.choice-card__body strong {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.choice-card__body em {
+  font-style: normal;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.choice-card.is-on {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
+}
+
+.choice-card.is-on .choice-card__icon {
+  background: rgba(255, 253, 249, 0.12);
+}
+
+.choice-card.is-on .choice-card__body em {
+  color: rgba(255, 253, 249, 0.72);
+}
+
+.form-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.form-stepper li {
+  position: relative;
+  min-width: 0;
+}
+
+.form-stepper li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: calc(50% + 18px);
+  right: calc(-50% + 18px);
+  height: 1px;
+  background: var(--line);
+}
+
+.form-stepper li.is-done:not(:last-child)::after {
+  background: var(--ink);
+}
+
+.form-stepper button {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.form-stepper button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.form-stepper__dot {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--white);
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.form-stepper li.is-current .form-stepper__dot {
+  border-color: var(--orange);
+  background: var(--orange);
+  color: var(--white);
+}
+
+.form-stepper li.is-done .form-stepper__dot {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
+}
+
+.form-stepper__label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: -0.02em;
+}
+
+.form-stepper li.is-current .form-stepper__label {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.chip-icon-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 4px;
+}
+
+.chip.chip-icon {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 14px;
+}
+
+.chip.chip-icon span:first-child {
+  font-size: 18px;
+  line-height: 1;
+}
+
 .product-grid {
   display: grid;
   gap: 12px;
@@ -817,6 +1005,10 @@ p {
 }
 
 @media (min-width: 640px) {
+  .chip-icon-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

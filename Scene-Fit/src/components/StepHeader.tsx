@@ -6,9 +6,10 @@ type StepHeaderProps = {
   title: string
   caption?: string
   backTo?: string
+  onBack?: () => void
 }
 
-export function StepHeader({ step, title, caption, backTo }: StepHeaderProps) {
+export function StepHeader({ step, title, caption, backTo, onBack }: StepHeaderProps) {
   const navigate = useNavigate()
   const total = 6
 
@@ -18,7 +19,11 @@ export function StepHeader({ step, title, caption, backTo }: StepHeaderProps) {
         <button
           type="button"
           className="icon-btn"
-          onClick={() => (backTo ? navigate(backTo) : navigate(-1))}
+          onClick={() => {
+            if (onBack) onBack()
+            else if (backTo) navigate(backTo)
+            else navigate(-1)
+          }}
           aria-label="뒤로"
         >
           ←
