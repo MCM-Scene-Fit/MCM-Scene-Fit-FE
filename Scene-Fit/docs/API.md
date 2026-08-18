@@ -1,4 +1,4 @@
-# MCM SCENE FIT API v1.1
+# MCM SCENE FIT API v1.2
 
 프론트엔드(`Scene-Fit/`)와 백엔드가 공유하는 계약서입니다. 기획서 MVP 범위인 **제품 선택 → 조건 검증 → 대안 비교 → Store Fit Pass**를 서버에서 지원하기 위한 명세입니다.
 
@@ -264,6 +264,7 @@ type ItemVerdict = {
   item: ItemId
   level: EvidenceLevel
   message: string
+  fillRatio: number        // 축 점유율. 1을 넘으면 가방 치수를 초과한다
 }
 
 type Axis = {
@@ -281,13 +282,14 @@ type FitResult = {
     items: ItemVerdict[]
     status: AxisStatus
     load: CarryLoad          // 선택한 품목 겉보기 합. 가방 적재율 아님
+    score: number | null     // 품목 판정 평균(0–100). 소지품이 없으면 null
   }
   rewearPotential: Axis
   matches: string[]        // 잘 맞는 점, 최대 3
   mismatches: string[]     // 잘 맞지 않는 점, 최대 3
   storeChecks: string[]    // 매장 확인 항목, 최대 3
   alternativeId: string | null
-  allConditionsMet: boolean
+  allConditionsMet: boolean   // mismatches가 비어 있으면 true
 }
 ```
 
@@ -512,10 +514,15 @@ AI가 아니라 **서버 규칙**입니다. 프론트 `src/lib/fitCheck.ts`와 �
 | --- | --- | --- |
 | `confirmed` | `officialStorage`에 해당 품목이 있음 | `13인치 노트북 수납이 공식 확인되었습니다.` |
 | `unlikely` | 품목 AABB가 가방 AABB에 어떤 축 정렬 회전으로도 들어가지 않음 | `선택한 노트북 크기보다 가방이 작습니다.` |
-| `estimated` | `likelyStorage`에 있음(치수상 가능, 내부 구조 미확인) | `크기상 가능성이 있으나 실제 배치는 달라질 수 있습니다.` |
-| `store-check` | 그 외 | `{품목} 수납은 매장에서 확인해 주세요.` |
+| `estimated` | 축 점유율 85% 이하 (치수상 여유 있음, 내부 구조 미확인) | `{품목}은 점유 51%로 안정 범위(85% 이하)에 들어가 수납이 예상됩니다.` |
+| `store-check` | 축 점유율 85% 초과 100% 이하 | `{품목}은 점유 92%라 입구·형태에 따라 달라질 수 있어 매장에서 확인해 주세요.` |
 
 `confirmed`보다 `unlikely`를 먼저 보지 않습니다. 공식 수납이 있으면 치수 추측으로 뒤집지 않습니다.
+
+**축 점유율(`fillRatio`)** 은 품목과 가방의 가로·세로·폭을 각각 오름차순 정렬해 짝지어 나눈 값 중 가장 큰 것입니다. 축 정렬 회전만 허용하며, 1을 넘으면 가방 외형을 초과합니다.
+`carryCheck.score`는 품목별 판정 점수(`confirmed` 100 · `estimated` 80 · `store-check` 50 · `unlikely` 0)의 평균입니다. 가방 적재율이 아니라 판정 신뢰도 지표입니다.
+
+모든 판정 message에는 품목명이 포함됩니다.
 `carryCheck.load`는 선택한 품목의 겉보기 부피·무게 합입니다. 가방 적재율로 쓰지 않습니다.
 
 ### 6-2. 세 축 계산
