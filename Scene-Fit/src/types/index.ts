@@ -101,6 +101,8 @@ export type ItemVerdict = {
   item: ItemId
   level: EvidenceLevel
   message: string
+  /** 축 정렬 회전 후 가장 빡센 축 점유율. 1을 넘으면 가방 치수 초과. */
+  fillRatio: number
 }
 
 export const AXIS_STATUSES = ['match', 'check', 'weak'] as const
@@ -113,6 +115,8 @@ export type FitResult = {
     items: ItemVerdict[]
     status: AxisStatus
     load: CarryLoad
+    /** 품목 판정 평균(0–100). 소지품이 없으면 null. */
+    score: number | null
   }
   rewearPotential: { headline: string; detail: string; positive: boolean; status: AxisStatus }
   matches: string[]

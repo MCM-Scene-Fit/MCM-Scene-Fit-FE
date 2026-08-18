@@ -84,6 +84,20 @@ export const EVIDENCE_LABEL: Record<EvidenceLevel, string> = {
   unlikely: '어려움',
 }
 
+export const EVIDENCE_BADGE: Record<EvidenceLevel, string> = {
+  confirmed: '🟢',
+  estimated: '🔵',
+  'store-check': '🟡',
+  unlikely: '🔴',
+}
+
+export const CARRY_SCORE_POINTS: Record<EvidenceLevel, number> = {
+  confirmed: 100,
+  estimated: 80,
+  'store-check': 50,
+  unlikely: 0,
+}
+
 export const AXIS_STATUS_LABEL: Record<AxisStatus, string> = {
   match: '맞음',
   check: '확인 필요',

@@ -1,7 +1,7 @@
-import { ITEM_LABEL, SCENE_LABEL, WEAR_LABEL } from '../data/labels'
+import { CARRY_SCORE_POINTS, ITEM_LABEL, SCENE_LABEL, WEAR_LABEL } from '../data/labels'
 import { sumCarryLoad } from '../data/items'
 import { PRODUCTS } from '../data/products'
-import { itemFitsProduct } from './itemFit'
+import { formatOccupancy, itemFitsProduct, judgeItemFit } from './itemFit'
 import type {
   AxisStatus,
   Conditions,
@@ -13,42 +13,57 @@ import type {
 } from '../types'
 
 function verdictForItem(product: Product, item: ItemId): ItemVerdict {
-  if (product.officialStorage.includes(item)) {
+  const { level, fillRatio } = judgeItemFit(item, product)
+  const name = ITEM_LABEL[item]
+  const fill = formatOccupancy(fillRatio)
+
+  if (level === 'confirmed') {
     return {
       item,
-      level: 'confirmed',
-      message: `${ITEM_LABEL[item]} 수납이 공식 확인되었습니다.`,
+      level,
+      fillRatio,
+      message: `${name} 수납이 공식 확인되었습니다.`,
     }
   }
 
-  if (!itemFitsProduct(item, product)) {
+  if (level === 'unlikely') {
     return {
       item,
-      level: 'unlikely',
+      level,
+      fillRatio,
       message:
         item === 'laptop13' || item === 'laptop16'
           ? '선택한 노트북 크기보다 가방이 작습니다.'
-          : `${ITEM_LABEL[item]} 크기보다 가방이 작아 수납은 어려워 보입니다.`,
+          : `${name} 크기보다 가방이 작아 수납은 어려워 보입니다.`,
     }
   }
 
-  if (product.likelyStorage.includes(item)) {
+  if (level === 'estimated') {
     return {
       item,
-      level: 'estimated',
-      message: `크기상 가능성이 있으나 실제 배치는 달라질 수 있습니다.`,
+      level,
+      fillRatio,
+      message: `점유 ${fill}로 안정 범위(85% 이하)에 들어가 수납이 예상됩니다.`,
     }
   }
 
   return {
     item,
-    level: 'store-check',
-    message: `${ITEM_LABEL[item]} 수납은 매장에서 확인해 주세요.`,
+    level,
+    fillRatio,
+    message: `점유 ${fill}라 입구·형태에 따라 달라질 수 있어 매장에서 확인해 주세요.`,
   }
+}
+
+function carryScore(items: ItemVerdict[]) {
+  if (items.length === 0) return null
+  const total = items.reduce((sum, item) => sum + CARRY_SCORE_POINTS[item.level], 0)
+  return Math.round(total / items.length)
 }
 
 function carryHeadline(items: ItemVerdict[]) {
   const confirmed = items.filter((item) => item.level === 'confirmed')
+  const estimated = items.filter((item) => item.level === 'estimated')
   const store = items.filter((item) => item.level === 'store-check')
   const unlikely = items.filter((item) => item.level === 'unlikely')
 
@@ -58,8 +73,14 @@ function carryHeadline(items: ItemVerdict[]) {
   if (confirmed.length && store.length) {
     return `${confirmed.map((item) => ITEM_LABEL[item.item]).join('·')}은 확인됨 / ${store.map((item) => ITEM_LABEL[item.item]).join('·')}은 확인 필요`
   }
+  if (confirmed.length && estimated.length) {
+    return `${confirmed.map((item) => ITEM_LABEL[item.item]).join('·')}은 확인됨 / ${estimated.map((item) => ITEM_LABEL[item.item]).join('·')}은 예상됨`
+  }
   if (confirmed.length) {
     return `${confirmed.map((item) => ITEM_LABEL[item.item]).join('·')} 수납이 확인됨`
+  }
+  if (estimated.length && store.length === 0) {
+    return '선택한 소지품은 크기상 수납이 예상됩니다'
   }
   return '선택한 소지품은 매장에서 확인이 필요합니다'
 }
@@ -135,6 +156,7 @@ export function runFitCheck(product: Product, conditions: Conditions): FitResult
     items: itemVerdicts,
     status: carryStatus(itemVerdicts, wearOk, Boolean(conditions.wearStyle)),
     load: sumCarryLoad(conditions.items),
+    score: carryScore(itemVerdicts),
   }
 
   const rewearScene = conditions.rewearScene ?? 'daily'
@@ -206,7 +228,7 @@ export function runFitCheck(product: Product, conditions: Conditions): FitResult
 
 export function evidenceTone(level: EvidenceLevel) {
   if (level === 'confirmed') return 'ok'
-  if (level === 'estimated') return 'warn'
+  if (level === 'estimated') return 'estimated'
   if (level === 'unlikely') return 'bad'
-  return 'info'
+  return 'warn'
 }
