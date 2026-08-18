@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 type ChipProps = {
   on: boolean
   onClick: () => void
-  icon?: string
+  icon?: ReactNode
   children: ReactNode
 }
 
@@ -15,7 +15,11 @@ export function Chip({ on, onClick, icon, children }: ChipProps) {
       aria-pressed={on}
       onClick={onClick}
     >
-      {icon ? <span aria-hidden="true">{icon}</span> : null}
+      {icon ? (
+        <span className="chip-icon__glyph" aria-hidden="true">
+          {icon}
+        </span>
+      ) : null}
       {children}
     </button>
   )

@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { ChoiceCard } from './ChoiceCard'
 import { Chip } from './Chip'
+import { ItemLoadSummary } from './ItemLoadSummary'
+import { ITEMS_BY_CATEGORY } from '../data/items'
 import {
-  ITEM_ICON,
-  ITEM_LABEL,
   MOBILITY_HINT,
   MOBILITY_ICON,
   MOBILITY_LABEL,
@@ -20,7 +20,6 @@ import {
   isWizardStepComplete,
 } from '../lib/conditionsWizard'
 import {
-  ITEMS,
   MOBILITY,
   SCENES,
   WEAR_STYLES,
@@ -77,7 +76,7 @@ export function ConditionsWizard({
       </ol>
 
       {step === 1 ? (
-        <div className="choice-grid choice-grid-2">
+        <div className="choice-grid choice-grid-scenes">
           {SCENES.map((scene) => (
             <ChoiceCard
               key={scene}
@@ -113,17 +112,25 @@ export function ConditionsWizard({
       ) : null}
 
       {step === 3 ? (
-        <div className="chip-row chip-icon-row">
-          {ITEMS.map((item: ItemId) => (
-            <Chip
-              key={item}
-              icon={ITEM_ICON[item]}
-              on={value.items.includes(item)}
-              onClick={() => onToggleItem(item)}
-            >
-              {ITEM_LABEL[item]}
-            </Chip>
+        <div className="item-picker">
+          {ITEMS_BY_CATEGORY.map((group) => (
+            <section key={group.category} className="item-picker__cat">
+              <h3>{group.label}</h3>
+              <div className="chip-row chip-icon-row">
+                {group.items.map((item) => (
+                  <Chip
+                    key={item.id}
+                    icon={<img src={item.icon} alt="" />}
+                    on={value.items.includes(item.id)}
+                    onClick={() => onToggleItem(item.id)}
+                  >
+                    {item.label}
+                  </Chip>
+                ))}
+              </div>
+            </section>
           ))}
+          <ItemLoadSummary items={value.items} />
         </div>
       ) : null}
 

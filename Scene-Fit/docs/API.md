@@ -1,4 +1,4 @@
-# MCM SCENE FIT API v1.0
+# MCM SCENE FIT API v1.1
 
 프론트엔드(`Scene-Fit/`)와 백엔드가 공유하는 계약서입니다. 기획서 MVP 범위인 **제품 선택 → 조건 검증 → 대안 비교 → Store Fit Pass**를 서버에서 지원하기 위한 명세입니다.
 
@@ -111,7 +111,8 @@ HTTP 상태 코드와 함께 아래 본문을 반환합니다.
 | `Scene` | `travel` `work` `culture` `meetup` `daily` | 여행 / 출근 / 전시·문화생활 / 약속·모임 / 데일리 |
 | `Mobility` | `indoor` `light-walk` `long-walk` | 실내 중심 / 가벼운 도보 / 오래 걷기 |
 | `WearStyle` | `tote` `shoulder` `crossbody` `backpack` | 토트 / 숄더 / 크로스바디 / 백팩 |
-| `ItemId` | `phone` `wallet` `pouch` `tablet` `laptop13` `camera` `bottle` | 휴대전화 / 지갑 / 파우치 / 태블릿 / 13인치 노트북 / 소형 카메라 / 350mL 물병 |
+| `ItemId` | `phone` `tablet` `laptop13` `laptop16` `powerbank` `earphones` `camera` `pouch` `lipbalm` `sanitizer` `tissues` `bottle` `umbrella` `wallet` `keys` `sunglasses` | 휴대전화 / 태블릿 / 13인치 노트북 / 16인치 노트북 / 보조배터리 / 무선이어폰 / 소형 카메라 / 파우치 / 립밤 / 손소독제 / 티슈 / 350mL 물병 / 3단 우산 / 지갑 / 열쇠 / 선글라스 |
+| `ItemCategory` | `tech` `beauty` `drink` `everyday` | IT 기기 / 뷰티·위생 / 음료·우산 / 소지품 |
 | `EvidenceLevel` | `confirmed` `estimated` `store-check` `unlikely` | 확인됨 / 예상됨 / 매장 확인 필요 / 어려움 |
 | `AxisStatus` | `match` `check` `weak` | 맞음 / 확인 필요 / 약함 |
 | `FitPassExperience` | `fit-ratio` `storage-test` `styling` `color-compare` `care` | 아래 체험 선택지 |
@@ -141,6 +142,7 @@ HTTP 상태 코드와 함께 아래 본문을 반환합니다.
 
 | 우선순위 | Method | Path | 설명 |
 | --- | --- | --- | --- |
+| P0 | `GET` | `/items` | 소지품 카탈로그(치수·무게·카테고리·아이콘) |
 | P0 | `GET` | `/products` | 제품 목록·필터 |
 | P0 | `GET` | `/products/{productId}` | 제품 상세 |
 | P0 | `GET` | `/stores` | 데모 매장 목록 |
@@ -211,10 +213,36 @@ type Product = {
 규칙:
 
 - `officialStorage`에는 공식 상세에 **해당 품목 수납이 명시된 경우만** 넣습니다.
+- `likelyStorage`는 공식 수납이 아닌 품목 중, 품목 AABB가 가방 AABB에 축 정렬 회전으로 들어가는 경우입니다. 내부 용량·적재율이 아닙니다.
 - 외부 부피를 수납 용량으로 환산한 필드를 두지 않습니다.
 - 이미지는 공식 컷 URL입니다. 서버가 제품을 다시 그리지 않습니다.
 
-### 3-2. Conditions
+### 3-2. CarryItem
+
+대표 소지품 카탈로그입니다. 사용자 입력이 아니라 **공유 시드**입니다. 세션에는 `ItemId`만 저장합니다.
+
+```ts
+type CarryLoad = {
+  count: number
+  volumeMl: number   // 가로×세로×두께 겉보기 합(mL). 가방 적재율 아님
+  weightG: number
+}
+
+type CarryItem = {
+  id: ItemId
+  category: ItemCategory
+  label: string
+  widthMm: number
+  heightMm: number
+  depthMm: number
+  weightG: number
+  icon: string       // 단색 라인 SVG 경로. 예: /items/phone.svg
+}
+```
+
+부피·무게 합은 고른 품목의 겉보기 합입니다. `90% 찼다` 같은 가방 적재율로 바꾸지 않습니다.
+
+### 3-3. Conditions
 
 ```ts
 type Conditions = {
@@ -229,7 +257,7 @@ type Conditions = {
 
 Fit Check 요청 시 필수 4개(`scene`, `mobility`, `items`, `wearStyle`)가 없으면 `409 CONDITIONS_INCOMPLETE`입니다.
 
-### 3-3. FitResult
+### 3-4. FitResult
 
 ```ts
 type ItemVerdict = {
@@ -252,6 +280,7 @@ type FitResult = {
     headline: string
     items: ItemVerdict[]
     status: AxisStatus
+    load: CarryLoad          // 선택한 품목 겉보기 합. 가방 적재율 아님
   }
   rewearPotential: Axis
   matches: string[]        // 잘 맞는 점, 최대 3
@@ -271,6 +300,32 @@ type FitResult = {
 ---
 
 ## 4. 제품
+
+### `GET /v1/items`
+
+소지품 선택 UI·간이 합산·치수 판정이 공유하는 카탈로그입니다. 사용자별 데이터가 아닙니다.
+
+응답:
+
+```json
+{
+  "data": [
+    {
+      "id": "phone",
+      "category": "tech",
+      "label": "휴대전화",
+      "widthMm": 72,
+      "heightMm": 148,
+      "depthMm": 8,
+      "weightG": 200,
+      "icon": "/items/phone.svg"
+    }
+  ],
+  "meta": { "count": 16 }
+}
+```
+
+프론트 시드는 [`../src/data/items.ts`](../src/data/items.ts)와 동일해야 합니다.
 
 ### `GET /v1/products`
 
@@ -426,7 +481,8 @@ AI가 아니라 **서버 규칙**입니다. 프론트 `src/lib/fitCheck.ts`와 �
           "level": "store-check",
           "message": "소형 카메라 수납은 매장에서 확인해 주세요."
         }
-      ]
+      ],
+      "load": { "count": 3, "volumeMl": 521, "weightG": 530 }
     },
     "rewearPotential": {
       "headline": "데일리에 반복 활용 가능",
@@ -455,11 +511,12 @@ AI가 아니라 **서버 규칙**입니다. 프론트 `src/lib/fitCheck.ts`와 �
 | level | 기준 | message 예시 |
 | --- | --- | --- |
 | `confirmed` | `officialStorage`에 해당 품목이 있음 | `13인치 노트북 수납이 공식 확인되었습니다.` |
-| `unlikely` | 명백히 불가. MVP는 `laptop13`이고 `widthMm < 320` | `선택한 노트북 크기보다 가방 폭이 작습니다.` |
-| `estimated` | `likelyStorage`에 있음 | `크기상 가능성이 있으나 실제 배치는 달라질 수 있습니다.` |
+| `unlikely` | 품목 AABB가 가방 AABB에 어떤 축 정렬 회전으로도 들어가지 않음 | `선택한 노트북 크기보다 가방이 작습니다.` |
+| `estimated` | `likelyStorage`에 있음(치수상 가능, 내부 구조 미확인) | `크기상 가능성이 있으나 실제 배치는 달라질 수 있습니다.` |
 | `store-check` | 그 외 | `{품목} 수납은 매장에서 확인해 주세요.` |
 
 `confirmed`보다 `unlikely`를 먼저 보지 않습니다. 공식 수납이 있으면 치수 추측으로 뒤집지 않습니다.
+`carryCheck.load`는 선택한 품목의 겉보기 부피·무게 합입니다. 가방 적재율로 쓰지 않습니다.
 
 ### 6-2. 세 축 계산
 
@@ -473,7 +530,7 @@ AI가 아니라 **서버 규칙**입니다. 프론트 `src/lib/fitCheck.ts`와 �
    - 토트만 가능하고 크로스바디·백팩이 없으면 mismatch
    - `weightG >= 850`이면 store-check. **공식 무게가 없으면 무게 판단을 하지 않음**
 5. **Rewear Potential:** `rewearScene`(없으면 `daily`) ∈ `rewearTags` 이면 `match`, 아니면 `weak`
-6. **대안:** 선택 제품을 제외하고 착용(+4) · 장면(+3) · 공식 수납 품목 수(+1) · 착용 불일치(-5) · 노트북 폭 부족(-4). 최고점 `> 0`일 때만 `alternativeId`
+6. **대안:** 선택 제품을 제외하고 착용(+4) · 장면(+3) · 공식 수납 품목 수(+1) · 착용 불일치(-5) · 치수상 불가 품목(-4). 최고점 `> 0`일 때만 `alternativeId`
 
 방수·내구성·기후 적합성은 `careNotes` 등 **공식 관리 정보가 있을 때만** 문장에 넣을 수 있습니다. 없으면 침묵합니다.
 
@@ -789,7 +846,7 @@ Query: `destination`, `period` (예: `도쿄`, `2026-10`).
 | --- | --- | --- |
 | 제품 선택 | `/products` | `GET /products` |
 | 착용 미리보기 | `/preview` | 없음 (온디바이스) |
-| 조건 입력 | `/conditions` | `PATCH /sessions/me` (선택) |
+| 조건 입력 | `/conditions` | `GET /items`, `PATCH /sessions/me` (선택) |
 | Scene Fit Card | `/result` | `POST /fit-check`, `POST /ai/explain` |
 | 비교 | `/compare` | `POST /fit-check/compare` |
 | Fit Pass | `/fit-pass` | `GET /stores`, `POST /fit-passes` |
@@ -820,12 +877,13 @@ Query: `destination`, `period` (예: `도쿄`, `2026-10`).
 기획서 14-4와 맞춥니다.
 
 1. 제품 10개 시드 (공식 URL, 치수, `officialStorage` 검수) + `GET /products`
-2. `POST /fit-check` 규칙 엔진 (`confirmed` 오판 0건이 목표)
-3. `POST /fit-check/compare`, `POST /recommend`
-4. `POST /ai/explain` — 규칙 결과를 입력으로만 사용
-5. `POST /fit-passes` — `demo: true`, status는 확인 요청만
-6. 세션·업로드 삭제
-7. (P1) 날씨 참고, 자연어 조건 파싱
+2. 소지품 카탈로그 시드 + `GET /items` (`src/data/items.ts`와 동일)
+3. `POST /fit-check` 규칙 엔진 (`confirmed` 오판 0건이 목표, 치수 AABB로 `unlikely`/`likelyStorage`)
+4. `POST /fit-check/compare`, `POST /recommend`
+5. `POST /ai/explain` — 규칙 결과를 입력으로만 사용
+6. `POST /fit-passes` — `demo: true`, status는 확인 요청만
+7. 세션·업로드 삭제
+8. (P1) 날씨 참고, 자연어 조건 파싱
 
 ---
 
@@ -842,7 +900,8 @@ Query: `destination`, `period` (예: `도쿄`, `2026-10`).
 
 예시 픽스처:
 
-1. `laptop13` + `widthMm < 320` → 해당 품목 `unlikely`
-2. 공식 페이지에 노트북 수납 명시는 있고 폭이 충분한 Stark 백팩 → `laptop13` = `confirmed`
+1. `laptop13`이 가방 AABB에 안 들어감 → 해당 품목 `unlikely`
+2. 공식 페이지에 노트북 수납 명시는 있고 치수도 되는 Stark 백팩 → `laptop13` = `confirmed`
 3. 카메라+물병 동시 수납 → 각각 판정. 동시 수납을 `confirmed`로 합치지 않음
 4. 착용 `crossbody` 요청 + 토트만 가능한 제품 → Carry `weak`, 대안 탐색
+5. `carryCheck.load`로 적재율(`90% 찼다`)을 만든 사례 0건

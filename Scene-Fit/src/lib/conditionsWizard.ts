@@ -17,7 +17,7 @@ export const CONDITION_STEPS = [
     id: 3,
     label: '소지품',
     title: '가져갈 소지품을 골라 주세요',
-    caption: '여러 개 고른 뒤 다음을 눌러 주세요.',
+    caption: '카테고리에서 여러 개 고른 뒤 다음을 눌러 주세요.',
   },
   {
     id: 4,

@@ -1,3 +1,4 @@
+import { CARRY_ITEMS } from './items'
 import type {
   AxisStatus,
   BodyBuild,
@@ -72,25 +73,9 @@ export const WEAR_HINT: Record<WearStyle, string> = {
   backpack: '무게를 분산해 장거리 이동에 편함',
 }
 
-export const ITEM_LABEL: Record<ItemId, string> = {
-  phone: '휴대전화',
-  wallet: '지갑',
-  pouch: '파우치',
-  tablet: '태블릿',
-  laptop13: '13인치 노트북',
-  camera: '소형 카메라',
-  bottle: '350mL 물병',
-}
-
-export const ITEM_ICON: Record<ItemId, string> = {
-  phone: '📱',
-  wallet: '💳',
-  pouch: '👝',
-  tablet: '📲',
-  laptop13: '💻',
-  camera: '📷',
-  bottle: '💧',
-}
+export const ITEM_LABEL: Record<ItemId, string> = Object.fromEntries(
+  CARRY_ITEMS.map((item) => [item.id, item.label]),
+) as Record<ItemId, string>
 
 export const EVIDENCE_LABEL: Record<EvidenceLevel, string> = {
   confirmed: '확인됨',

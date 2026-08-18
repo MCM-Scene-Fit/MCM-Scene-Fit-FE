@@ -30,31 +30,33 @@ export function ConditionsPage() {
         onChange={setConditions}
         onToggleItem={toggleItem}
       >
-        <label className="text-field">
-          <span>여행 또는 방문 장소·시기 (선택)</span>
-          <input
-            value={conditions.destination}
-            placeholder="예: 도쿄, 10월"
-            onChange={(event) => setConditions({ destination: event.target.value })}
-          />
-        </label>
+        <div className="wizard-extras">
+          <label className="text-field">
+            <span>여행 또는 방문 장소·시기 (선택)</span>
+            <input
+              value={conditions.destination}
+              placeholder="예: 도쿄, 10월"
+              onChange={(event) => setConditions({ destination: event.target.value })}
+            />
+          </label>
 
-        <div>
-          <p className="field-label">이후 다시 사용할 장면 (선택)</p>
-          <div className="chip-row">
-            {SCENES.map((scene) => (
-              <Chip
-                key={scene}
-                on={conditions.rewearScene === scene}
-                onClick={() =>
-                  setConditions({
-                    rewearScene: conditions.rewearScene === scene ? null : scene,
-                  })
-                }
-              >
-                {SCENE_LABEL[scene]}
-              </Chip>
-            ))}
+          <div>
+            <p className="field-label">이후 다시 사용할 장면 (선택)</p>
+            <div className="chip-row chip-row-fill">
+              {SCENES.map((scene) => (
+                <Chip
+                  key={scene}
+                  on={conditions.rewearScene === scene}
+                  onClick={() =>
+                    setConditions({
+                      rewearScene: conditions.rewearScene === scene ? null : scene,
+                    })
+                  }
+                >
+                  {SCENE_LABEL[scene]}
+                </Chip>
+              ))}
+            </div>
           </div>
         </div>
       </ConditionsWizard>

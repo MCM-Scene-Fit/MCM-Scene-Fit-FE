@@ -1,5 +1,7 @@
 import { ITEM_LABEL, SCENE_LABEL, WEAR_LABEL } from '../data/labels'
+import { sumCarryLoad } from '../data/items'
 import { PRODUCTS } from '../data/products'
+import { itemFitsProduct } from './itemFit'
 import type {
   AxisStatus,
   Conditions,
@@ -19,11 +21,14 @@ function verdictForItem(product: Product, item: ItemId): ItemVerdict {
     }
   }
 
-  if (item === 'laptop13' && product.widthMm < 320) {
+  if (!itemFitsProduct(item, product)) {
     return {
       item,
       level: 'unlikely',
-      message: `선택한 노트북 크기보다 가방 폭이 작습니다.`,
+      message:
+        item === 'laptop13' || item === 'laptop16'
+          ? '선택한 노트북 크기보다 가방이 작습니다.'
+          : `${ITEM_LABEL[item]} 크기보다 가방이 작아 수납은 어려워 보입니다.`,
     }
   }
 
@@ -92,7 +97,7 @@ function findAlternative(product: Product, conditions: Conditions) {
       if (scene && candidate.sceneTags.includes(scene)) score += 3
       score += items.filter((item) => candidate.officialStorage.includes(item)).length
       if (wear && !candidate.wearStyles.includes(wear)) score -= 5
-      if (items.includes('laptop13') && candidate.widthMm < 320) score -= 4
+      if (items.some((item) => !itemFitsProduct(item, candidate))) score -= 4
       return { candidate, score }
     })
     .sort((a, b) => b.score - a.score)
@@ -129,6 +134,7 @@ export function runFitCheck(product: Product, conditions: Conditions): FitResult
         : carryHeadline(itemVerdicts),
     items: itemVerdicts,
     status: carryStatus(itemVerdicts, wearOk, Boolean(conditions.wearStyle)),
+    load: sumCarryLoad(conditions.items),
   }
 
   const rewearScene = conditions.rewearScene ?? 'daily'
