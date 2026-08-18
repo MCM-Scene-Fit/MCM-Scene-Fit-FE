@@ -7,16 +7,34 @@ export type Mobility = (typeof MOBILITY)[number]
 export const WEAR_STYLES = ['tote', 'shoulder', 'crossbody', 'backpack'] as const
 export type WearStyle = (typeof WEAR_STYLES)[number]
 
+export const ITEM_CATEGORIES = ['tech', 'beauty', 'drink', 'everyday'] as const
+export type ItemCategory = (typeof ITEM_CATEGORIES)[number]
+
 export const ITEMS = [
   'phone',
-  'wallet',
-  'pouch',
   'tablet',
   'laptop13',
+  'laptop16',
+  'powerbank',
+  'earphones',
   'camera',
+  'pouch',
+  'lipbalm',
+  'sanitizer',
+  'tissues',
   'bottle',
+  'umbrella',
+  'wallet',
+  'keys',
+  'sunglasses',
 ] as const
 export type ItemId = (typeof ITEMS)[number]
+
+export type CarryLoad = {
+  count: number
+  volumeMl: number
+  weightG: number
+}
 
 export const EVIDENCE = [
   'confirmed',
@@ -90,7 +108,12 @@ export type AxisStatus = (typeof AXIS_STATUSES)[number]
 
 export type FitResult = {
   sceneMatch: { headline: string; detail: string; positive: boolean; status: AxisStatus }
-  carryCheck: { headline: string; items: ItemVerdict[]; status: AxisStatus }
+  carryCheck: {
+    headline: string
+    items: ItemVerdict[]
+    status: AxisStatus
+    load: CarryLoad
+  }
   rewearPotential: { headline: string; detail: string; positive: boolean; status: AxisStatus }
   matches: string[]
   mismatches: string[]

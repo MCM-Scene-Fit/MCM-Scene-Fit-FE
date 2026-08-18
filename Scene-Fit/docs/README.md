@@ -3,7 +3,7 @@
 MCM SCENE FIT의 프론트엔드 앱입니다. 기획·기능 명세는 저장소 루트 [README.md](../../README.md), 백엔드 계약은 [API.md](./API.md)를 참고하세요.
 
 > 현재 단계: **P0 화면 흐름 완료 / 백엔드 연동 전(로컬 목업) / 착용 미리보기 UX 고도화 중**  
-> 기준일: 2026-08-17
+> 기준일: 2026-08-18
 
 ---
 
@@ -47,7 +47,7 @@ MCM SCENE FIT의 프론트엔드 앱입니다. 기획·기능 명세는 저장�
 | 기능 | 상태 | 비고 |
 | --- | --- | --- |
 | 제품 선택 | 완료 | 착용 방식·색상·가격 필터, 공식 사양 카드, 제품 1개 선택 |
-| 장면·조건 입력 | 완료 | 필수 4단계 위저드(장면·이동량·소지품·착용) + 선택 2개(장소·재착용 장면) |
+| 장면·조건 입력 | 완료 | 필수 4단계 위저드 + 소지품 카탈로그·카테고리 칩·간이 부피/무게 |
 | 착용 미리보기 | 진행 중 | 온디바이스 자세·마스크·비율 합성은 동작. 촬영 가이드·나쁜 사진 경고는 남음 |
 | Scene Fit Card | 완료 | Scene Match / Carry Check / Rewear, 근거 수준(`confirmed` 등), 대안 1개 |
 | 대안 제품 비교 | 완료 | 선택 제품 vs 대안을 동일 세 축·확인 항목·가격으로 비교 |
@@ -121,6 +121,8 @@ Scene-Fit/
 ├── package.json
 ├── vite.config.ts
 ├── public/
+│   ├── items/                  # 소지품 단색 라인 SVG
+│   └── products/
 ├── docs/
 │   ├── README.md               # 프론트 개발 현황
 │   └── API.md                  # 백엔드 계약
@@ -129,13 +131,14 @@ Scene-Fit/
     ├── main.tsx
     ├── index.css
     ├── types/
-    ├── data/                   # products, labels
+    ├── data/                   # products, items, labels
     ├── store/useFlowStore.ts   # Zustand 플로우 상태
     ├── context/FlowContext.tsx
     ├── lib/
     │   ├── fitCheck.ts         # 규칙 기반 Scene Fit
     │   ├── productFilters.ts
     │   ├── conditionsWizard.ts # 필수 4단계 위저드
+    │   ├── itemFit.ts          # 소지품 AABB 수납 가능 여부
     │   ├── previewFit.ts       # 비율 환산
     │   ├── bodyAnalysis.ts     # MediaPipe 자세·마스크
     │   └── wearAnchor.ts       # 착용 위치 앵커
@@ -144,6 +147,7 @@ Scene-Fit/
     │   ├── ConditionsWizard.tsx
     │   ├── ChoiceCard.tsx
     │   ├── Chip.tsx
+    │   ├── ItemLoadSummary.tsx
     │   ├── ProductCard.tsx
     │   ├── ProductFilters.tsx
     │   ├── ProductImage.tsx

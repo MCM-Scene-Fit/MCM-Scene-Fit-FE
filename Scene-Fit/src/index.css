@@ -234,8 +234,7 @@ p {
 
 .wizard {
   display: grid;
-  gap: 16px;
-  max-width: 720px;
+  gap: 20px;
 }
 
 .choice-grid {
@@ -247,12 +246,39 @@ p {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.choice-grid-2 > :last-child:nth-child(odd) {
-  grid-column: 1 / -1;
+.choice-grid-scenes {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.choice-grid-scenes > * {
+  flex: 1 1 calc(50% - 5px);
 }
 
 .choice-grid-stack {
   grid-template-columns: 1fr;
+}
+
+.wizard-extras {
+  display: grid;
+  gap: 18px;
+}
+
+.wizard-extras .text-field {
+  margin-bottom: 0;
+}
+
+.chip-row-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.2rem, 1fr));
+  margin: 8px 0 0;
+}
+
+.chip-row-fill .chip {
+  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+  text-align: center;
 }
 
 .choice-card {
@@ -415,9 +441,73 @@ p {
   font-size: 14px;
 }
 
-.chip.chip-icon span:first-child {
-  font-size: 18px;
+.chip-icon__glyph {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
   line-height: 1;
+}
+
+.chip-icon__glyph img {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.chip.is-on .chip-icon__glyph img {
+  filter: invert(1);
+}
+
+.item-picker {
+  display: grid;
+  gap: 20px;
+}
+
+.item-picker__cat h3 {
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 2px;
+}
+
+.item-picker .chip-icon-row {
+  margin: 0;
+}
+
+.item-load {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--white);
+}
+
+.item-load strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.item-load .muted {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.item-load--compact {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: transparent;
+}
+
+.item-load--compact strong {
+  font-family: var(--font);
+  font-size: 13px;
 }
 
 .product-grid {
@@ -1102,6 +1192,15 @@ p {
 }
 
 @media (min-width: 640px) {
+  .choice-grid-scenes > * {
+    flex: 1 1 calc((100% - 20px) / 3);
+  }
+
+  .wizard-extras {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
   .chip-icon-row {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

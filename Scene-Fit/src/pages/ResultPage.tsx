@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ItemLoadSummary } from '../components/ItemLoadSummary'
 import { ProductMini } from '../components/ProductCard'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
@@ -137,6 +138,7 @@ export function ResultPage() {
           ) : (
             <p className="muted">선택한 소지품이 없으면 매장에서 수납을 확인해 주세요.</p>
           )}
+          <ItemLoadSummary items={conditions.items} compact />
         </AxisCard>
         <AxisCard
           label="Rewear Potential"

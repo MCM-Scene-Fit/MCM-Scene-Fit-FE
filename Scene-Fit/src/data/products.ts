@@ -1,3 +1,4 @@
+import { deriveLikelyStorage } from '../lib/itemFit'
 import type { Product, ProductColor } from '../types'
 
 /**
@@ -30,8 +31,12 @@ function swatch(id: string, name: string, hex: string, sku: string): ProductColo
   return { id, name, hex, sku, image: `/products/${sku}.webp`, imageWidth, imageHeight }
 }
 
+function withLikelyStorage(def: Omit<Product, 'likelyStorage'>): Product {
+  return { ...def, likelyStorage: deriveLikelyStorage(def) }
+}
+
 export const PRODUCTS: Product[] = [
-  {
+  withLikelyStorage({
     id: 'aren-nova-crossbody',
     name: 'Aren 노바 모노그램 ECONYL® 크로스바디',
     sku: 'MMRGATA07BK001',
@@ -47,14 +52,13 @@ export const PRODUCTS: Product[] = [
     wearStyles: ['crossbody'],
     strapAdjustable: true,
     officialStorage: [],
-    likelyStorage: ['phone', 'wallet', 'pouch'],
     pockets: 1,
     material: 'ECONYL® 재생 나일론, 비세토스 모노그램 모티프',
     sceneTags: ['travel', 'daily', 'meetup'],
     mood: ['nomad', 'city'],
     rewearTags: ['daily', 'meetup', 'culture'],
-  },
-  {
+  }),
+  withLikelyStorage({
     id: 'aren-mini-pouch',
     name: 'Aren 비세토스 크로스바디 파우치',
     sku: 'MYZGATA01CO001',
@@ -73,14 +77,13 @@ export const PRODUCTS: Product[] = [
     wearStyles: ['crossbody'],
     strapAdjustable: true,
     officialStorage: ['phone', 'wallet'],
-    likelyStorage: [],
     pockets: 2,
     material: '비세토스 모노그램 캔버스, 나파 가죽 트림',
     sceneTags: ['meetup', 'daily', 'culture'],
     mood: ['compact', 'evening'],
     rewearTags: ['daily', 'meetup'],
-  },
-  {
+  }),
+  withLikelyStorage({
     id: 'aren-ew-shoulder',
     name: 'Aren 비세토스 E/W 숄더백',
     sku: 'MWSGATA01BK001',
@@ -99,14 +102,13 @@ export const PRODUCTS: Product[] = [
     wearStyles: ['shoulder'],
     strapAdjustable: false,
     officialStorage: ['wallet'],
-    likelyStorage: ['phone', 'pouch'],
     pockets: 1,
     material: '비세토스 모노그램 캔버스, 레더 트림',
     sceneTags: ['meetup', 'culture', 'daily'],
     mood: ['clean', 'evening'],
     rewearTags: ['meetup', 'culture', 'daily'],
-  },
-  {
+  }),
+  withLikelyStorage({
     id: 'aren-hobo',
     name: 'Aren 비세토스 호보',
     sku: 'MWHESTA01CO001',
@@ -122,14 +124,13 @@ export const PRODUCTS: Product[] = [
     wearStyles: ['shoulder', 'crossbody'],
     strapAdjustable: true,
     officialStorage: [],
-    likelyStorage: ['phone', 'wallet', 'pouch'],
     pockets: 1,
     material: '비세토스 모노그램 캔버스, 나파 가죽 트림',
     sceneTags: ['daily', 'meetup', 'culture'],
     mood: ['relaxed', 'city'],
     rewearTags: ['daily', 'meetup', 'culture'],
-  },
-  {
+  }),
+  withLikelyStorage({
     id: 'toni-mini-shopper',
     name: 'Toni 비세토스 상단 지퍼 쇼퍼',
     sku: 'MWPAATN04CO001',
@@ -148,14 +149,13 @@ export const PRODUCTS: Product[] = [
     wearStyles: ['tote', 'crossbody'],
     strapAdjustable: true,
     officialStorage: [],
-    likelyStorage: ['phone', 'wallet', 'pouch'],
     pockets: 3,
     material: '비세토스 모노그램 코티드 캔버스, 나파 가죽 트림',
     sceneTags: ['daily', 'meetup', 'culture'],
     mood: ['street', 'compact'],
     rewearTags: ['daily', 'meetup'],
-  },
-  {
+  }),
+  withLikelyStorage({
     id: 'liz-shopper-m',
     name: 'New Liz 비세토스 쇼퍼',
     sku: 'MWPGSLR02I8001',
@@ -174,14 +174,13 @@ export const PRODUCTS: Product[] = [
     wearStyles: ['tote', 'shoulder'],
     strapAdjustable: false,
     officialStorage: ['pouch'],
-    likelyStorage: ['phone', 'wallet', 'tablet', 'bottle'],
     pockets: 1,
     material: '비세토스 모노그램 캔버스, 나파 가죽 트림',
     sceneTags: ['work', 'daily', 'culture', 'travel'],
     mood: ['day', 'soft'],
     rewearTags: ['work', 'daily', 'culture'],
-  },
-  {
+  }),
+  withLikelyStorage({
     id: 'aren-nova-tote',
     name: 'Aren 노바 모노그램 ECONYL® 토트',
     sku: 'MMTGATA01BK001',
@@ -197,14 +196,13 @@ export const PRODUCTS: Product[] = [
     wearStyles: ['tote', 'shoulder'],
     strapAdjustable: true,
     officialStorage: [],
-    likelyStorage: ['phone', 'wallet', 'pouch', 'tablet', 'laptop13', 'bottle'],
     pockets: 1,
     material: 'ECONYL® 재생 나일론, 비세토스 모노그램 모티프',
     sceneTags: ['work', 'travel', 'daily'],
     mood: ['structured', 'commute'],
     rewearTags: ['work', 'daily'],
-  },
-  {
+  }),
+  withLikelyStorage({
     id: 'stark-backpack-m',
     name: 'Stark 비세토스 백팩',
     sku: 'MMKFSVE05CO001',
@@ -220,14 +218,13 @@ export const PRODUCTS: Product[] = [
     wearStyles: ['backpack'],
     strapAdjustable: true,
     officialStorage: ['laptop13', 'tablet'],
-    likelyStorage: ['phone', 'wallet', 'pouch', 'bottle', 'camera'],
     pockets: 4,
     material: '비세토스 모노그램 캔버스, 천연 나파 가죽 트림',
     sceneTags: ['travel', 'work', 'daily'],
     mood: ['heritage', 'utilitarian'],
     rewearTags: ['work', 'travel', 'daily'],
-  },
-  {
+  }),
+  withLikelyStorage({
     id: 'stark-bebe-boo',
     name: 'Stark 비세토스 사이드 스터드 베베 부 백팩',
     sku: 'MMKEAVE17PZ001',
@@ -243,14 +240,13 @@ export const PRODUCTS: Product[] = [
     wearStyles: ['backpack', 'crossbody'],
     strapAdjustable: true,
     officialStorage: ['wallet'],
-    likelyStorage: ['phone', 'pouch'],
     pockets: 3,
     material: '비세토스 모노그램 캔버스, 천연 나파 가죽 트림',
     sceneTags: ['daily', 'meetup', 'travel'],
     mood: ['iconic', 'compact'],
     rewearTags: ['daily', 'meetup'],
-  },
-  {
+  }),
+  withLikelyStorage({
     id: 'ottomar-weekender-41',
     name: 'Ottomar 비세토스 위켄더 41cm',
     sku: 'MMVGATT01CO001',
@@ -269,13 +265,12 @@ export const PRODUCTS: Product[] = [
     wearStyles: ['tote', 'shoulder'],
     strapAdjustable: true,
     officialStorage: [],
-    likelyStorage: ['phone', 'wallet', 'pouch', 'tablet', 'laptop13', 'camera', 'bottle'],
     pockets: 2,
     material: '비세토스 모노그램 캔버스, 나파 가죽 트림',
     sceneTags: ['travel'],
     mood: ['heritage', 'nomad'],
     rewearTags: ['travel', 'daily'],
-  },
+  }),
 ]
 
 export function getProduct(id: string) {
