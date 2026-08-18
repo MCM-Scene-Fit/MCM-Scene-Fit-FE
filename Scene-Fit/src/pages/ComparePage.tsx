@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ProductMini } from '../components/ProductCard'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
-import { formatPrice, ITEM_LABEL } from '../data/labels'
+import { formatPrice, EVIDENCE_BADGE, EVIDENCE_LABEL, ITEM_LABEL } from '../data/labels'
 import { getProduct } from '../data/products'
 import { runFitCheck } from '../lib/fitCheck'
 
@@ -35,6 +35,11 @@ export function ComparePage() {
   const rows = [
     ['Scene Match', result.sceneMatch.headline, altResult.sceneMatch.headline],
     ['Carry Check', result.carryCheck.headline, altResult.carryCheck.headline],
+    [
+      '수납 지표',
+      result.carryCheck.score == null ? '—' : `${result.carryCheck.score}/100`,
+      altResult.carryCheck.score == null ? '—' : `${altResult.carryCheck.score}/100`,
+    ],
     ['Rewear', result.rewearPotential.headline, altResult.rewearPotential.headline],
     [
       '확인 필요',
@@ -71,12 +76,18 @@ export function ComparePage() {
             <th>소지품</th>
             <td>
               {result.carryCheck.items
-                .map((item) => `${ITEM_LABEL[item.item]} ${item.level === 'confirmed' ? '확인' : '확인필요'}`)
+                .map(
+                  (item) =>
+                    `${ITEM_LABEL[item.item]} ${EVIDENCE_BADGE[item.level]} ${EVIDENCE_LABEL[item.level]}`,
+                )
                 .join(', ')}
             </td>
             <td>
               {altResult.carryCheck.items
-                .map((item) => `${ITEM_LABEL[item.item]} ${item.level === 'confirmed' ? '확인' : '확인필요'}`)
+                .map(
+                  (item) =>
+                    `${ITEM_LABEL[item.item]} ${EVIDENCE_BADGE[item.level]} ${EVIDENCE_LABEL[item.level]}`,
+                )
                 .join(', ')}
             </td>
           </tr>

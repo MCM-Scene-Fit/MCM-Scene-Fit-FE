@@ -4,10 +4,11 @@ import { ItemLoadSummary } from '../components/ItemLoadSummary'
 import { ProductMini } from '../components/ProductCard'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
-import { AXIS_STATUS_LABEL, EVIDENCE_LABEL, ITEM_LABEL } from '../data/labels'
+import { AXIS_STATUS_LABEL, EVIDENCE_BADGE, EVIDENCE_LABEL, ITEM_LABEL } from '../data/labels'
 import { getProduct } from '../data/products'
 import { evidenceTone, runFitCheck } from '../lib/fitCheck'
-import type { AxisStatus } from '../types'
+import { formatOccupancy } from '../lib/itemFit'
+import type { AxisStatus, ItemVerdict } from '../types'
 
 const METER_FILL: Record<AxisStatus, number> = {
   weak: 1,
@@ -82,6 +83,36 @@ function NoteCard({
   )
 }
 
+function CarryScore({ score }: { score: number | null }) {
+  if (score == null) return null
+  return (
+    <p className="carry-score" aria-label={`수납 지표 ${score}점`}>
+      <span className="eyebrow">수납 지표</span>
+      <strong>{score}</strong>
+      <span className="carry-score__max">/100</span>
+    </p>
+  )
+}
+
+function VerdictTag({ verdict }: { verdict: ItemVerdict }) {
+  const tone = evidenceTone(verdict.level)
+  const fill = formatOccupancy(verdict.fillRatio)
+  const meta = verdict.level === 'confirmed' ? `공식 지원 · 점유 ${fill}` : `점유 ${fill}`
+
+  return (
+    <li className={`verdict-row verdict-row--${tone}`}>
+      <div className="verdict-row__copy">
+        <span>{ITEM_LABEL[verdict.item]}</span>
+        <small>{meta}</small>
+      </div>
+      <span className={`verdict-badge verdict-badge--${tone}`}>
+        <span aria-hidden="true">{EVIDENCE_BADGE[verdict.level]}</span>
+        {EVIDENCE_LABEL[verdict.level]}
+      </span>
+    </li>
+  )
+}
+
 export function ResultPage() {
   const navigate = useNavigate()
   const { selectedProduct, selectedColorId, conditions, conditionsReady, startQuickDemo } =
@@ -126,13 +157,11 @@ export function ResultPage() {
           status={result.carryCheck.status}
           headline={result.carryCheck.headline}
         >
+          {result.carryCheck.score != null ? <CarryScore score={result.carryCheck.score} /> : null}
           {result.carryCheck.items.length ? (
             <ul className="verdicts">
               {result.carryCheck.items.map((item) => (
-                <li key={item.item} className={evidenceTone(item.level)}>
-                  <span>{ITEM_LABEL[item.item]}</span>
-                  <b>{EVIDENCE_LABEL[item.level]}</b>
-                </li>
+                <VerdictTag key={item.item} verdict={item} />
               ))}
             </ul>
           ) : (
