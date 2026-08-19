@@ -6,6 +6,7 @@ import type {
   Conditions,
   FitPassDraft,
   FitPassExperience,
+  FitPassIssued,
   FitPassStatus,
   ItemId,
   PreviewMode,
@@ -27,6 +28,7 @@ type FlowState = {
   bag: BagTransform
   conditions: Conditions
   fitPass: FitPassDraft
+  fitPassIssued: FitPassIssued | null
   fitPassStatus: FitPassStatus | null
 }
 
@@ -41,7 +43,8 @@ type FlowActions = {
   toggleItem: (item: ItemId) => void
   setFitPass: (patch: Partial<FitPassDraft>) => void
   toggleExperience: (experience: FitPassExperience) => void
-  submitFitPass: () => void
+  submitFitPass: (storeChecks: string[]) => void
+  setFitPassStatus: (status: FitPassStatus) => void
   startQuickDemo: () => void
   resetFlow: () => void
 }
@@ -83,6 +86,7 @@ const initialState: FlowState = {
   bag: { x: 18, y: 42 },
   conditions: defaultConditions,
   fitPass: defaultFitPass,
+  fitPassIssued: null,
   fitPassStatus: null,
 }
 
@@ -148,7 +152,17 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
     })
   },
 
-  submitFitPass: () => set({ fitPassStatus: 'checking' }),
+  submitFitPass: (storeChecks) =>
+    set({
+      fitPassStatus: 'requested',
+      fitPassIssued: {
+        id: `fp_${Date.now().toString(36)}`,
+        storeChecks,
+        createdAt: new Date().toISOString(),
+      },
+    }),
+
+  setFitPassStatus: (status) => set({ fitPassStatus: status }),
 
   startQuickDemo: () => {
     const product = PRODUCTS[0]
@@ -170,6 +184,7 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
         rewearScene: 'daily',
       },
       fitPass: defaultFitPass,
+      fitPassIssued: null,
       fitPassStatus: null,
     })
   },

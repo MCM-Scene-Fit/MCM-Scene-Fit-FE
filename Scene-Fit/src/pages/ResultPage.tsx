@@ -1,5 +1,6 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FitPassRequestModal } from '../components/FitPassRequestModal'
 import { ItemLoadSummary } from '../components/ItemLoadSummary'
 import { ProductMini } from '../components/ProductCard'
 import { StepHeader, StickyBar } from '../components/StepHeader'
@@ -115,6 +116,7 @@ function VerdictTag({ verdict }: { verdict: ItemVerdict }) {
 
 export function ResultPage() {
   const navigate = useNavigate()
+  const [passOpen, setPassOpen] = useState(false)
   const { selectedProduct, selectedColorId, conditions, conditionsReady, startQuickDemo } =
     useFlow()
   const product = selectedProduct
@@ -219,7 +221,7 @@ export function ResultPage() {
           >
             대안과 비교
           </button>
-          <button type="button" className="btn btn-primary" onClick={() => navigate('/fit-pass')}>
+          <button type="button" className="btn btn-primary" onClick={() => setPassOpen(true)}>
             Fit Pass 만들기
           </button>
         </div>
@@ -229,6 +231,12 @@ export function ResultPage() {
           </button>
         ) : null}
       </StickyBar>
+
+      <FitPassRequestModal
+        open={passOpen}
+        storeChecks={result.storeChecks}
+        onClose={() => setPassOpen(false)}
+      />
     </main>
   )
 }

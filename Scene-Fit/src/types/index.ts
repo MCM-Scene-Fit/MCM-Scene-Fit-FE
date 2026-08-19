@@ -139,4 +139,10 @@ export type FitPassDraft = {
   customNote: string
 }
 
+export type FitPassIssued = {
+  id: string
+  storeChecks: string[]
+  createdAt: string
+}
+
 export type FitPassStatus = 'requested' | 'checking' | 'confirmed'

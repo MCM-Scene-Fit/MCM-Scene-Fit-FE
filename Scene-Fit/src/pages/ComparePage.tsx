@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { FitPassRequestModal } from '../components/FitPassRequestModal'
 import { ProductMini } from '../components/ProductCard'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
@@ -8,8 +8,8 @@ import { getProduct } from '../data/products'
 import { runFitCheck } from '../lib/fitCheck'
 
 export function ComparePage() {
-  const navigate = useNavigate()
-  const { selectedProduct, selectedColorId, conditions, selectProduct } = useFlow()
+  const [passTarget, setPassTarget] = useState<'selected' | 'alternative' | null>(null)
+  const { selectedProduct, selectedColorId, conditions } = useFlow()
   const selected = selectedProduct
 
   const result = useMemo(() => {
@@ -96,21 +96,30 @@ export function ComparePage() {
 
       <StickyBar>
         <div className="btn-row">
-          <button type="button" className="btn btn-ghost" onClick={() => navigate('/fit-pass')}>
+          <button type="button" className="btn btn-ghost" onClick={() => setPassTarget('selected')}>
             지금 가방으로 Fit Pass
           </button>
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => {
-              selectProduct(alternative.id)
-              navigate('/fit-pass')
-            }}
+            onClick={() => setPassTarget('alternative')}
           >
             대안으로 Fit Pass
           </button>
         </div>
       </StickyBar>
+
+      <FitPassRequestModal
+        open={passTarget !== null}
+        product={passTarget === 'alternative' ? alternative : selected}
+        colorId={
+          passTarget === 'alternative'
+            ? alternative.colors[0].id
+            : (selectedColorId ?? undefined)
+        }
+        storeChecks={passTarget === 'alternative' ? altResult.storeChecks : result.storeChecks}
+        onClose={() => setPassTarget(null)}
+      />
     </main>
   )
 }
