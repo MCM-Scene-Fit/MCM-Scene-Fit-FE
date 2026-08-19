@@ -2,7 +2,6 @@ import type { CSSProperties, ReactNode } from 'react'
 import {
   EVIDENCE_BADGE,
   EVIDENCE_LABEL,
-  ITEM_LABEL,
   WEAR_LABEL,
   formatPrice,
 } from '../data/labels'
@@ -106,7 +105,7 @@ function ItemBadges({ items }: { items: ItemVerdict[] }) {
         const tone = evidenceTone(item.level)
         return (
           <li key={item.item} className={`compare-item compare-item--${tone}`}>
-            <span>{ITEM_LABEL[item.item]}</span>
+            <span>{item.label}</span>
             <span className={`verdict-badge verdict-badge--${tone}`}>
               <span aria-hidden="true">{EVIDENCE_BADGE[item.level]}</span>
               {EVIDENCE_LABEL[item.level]}

@@ -2,7 +2,14 @@ import type { ReactNode } from 'react'
 import { ChoiceCard } from './ChoiceCard'
 import { Chip } from './Chip'
 import { ItemLoadSummary } from './ItemLoadSummary'
-import { ITEMS_BY_CATEGORY } from '../data/items'
+import { ItemPresetRow } from './ItemPresetRow'
+import {
+  kindSelected,
+  PICKER_ITEMS_BY_CATEGORY,
+  presetKindOf,
+  PRESET_KINDS,
+  type PresetKind,
+} from '../data/itemPresets'
 import {
   MOBILITY_HINT,
   MOBILITY_ICON,
@@ -33,6 +40,7 @@ type ConditionsWizardProps = {
   onStepChange: (step: number) => void
   onChange: (patch: Partial<Conditions>) => void
   onToggleItem: (item: ItemId) => void
+  onSetPreset: (kind: PresetKind, presetId: string) => void
   children?: ReactNode
 }
 
@@ -42,6 +50,7 @@ export function ConditionsWizard({
   onStepChange,
   onChange,
   onToggleItem,
+  onSetPreset,
   children,
 }: ConditionsWizardProps) {
   const goNextFrom = (from: number) => {
@@ -113,24 +122,46 @@ export function ConditionsWizard({
 
       {step === 3 ? (
         <div className="item-picker">
-          {ITEMS_BY_CATEGORY.map((group) => (
-            <section key={group.category} className="item-picker__cat">
-              <h3>{group.label}</h3>
-              <div className="chip-row chip-icon-row">
-                {group.items.map((item) => (
-                  <Chip
-                    key={item.id}
-                    icon={<img src={item.icon} alt="" />}
-                    on={value.items.includes(item.id)}
-                    onClick={() => onToggleItem(item.id)}
-                  >
-                    {item.label}
-                  </Chip>
+          {PICKER_ITEMS_BY_CATEGORY.map((group) => {
+            const kinds = PRESET_KINDS.filter(
+              (kind) =>
+                group.items.some((item) => presetKindOf(item.id) === kind) &&
+                kindSelected(kind, value.items),
+            )
+
+            return (
+              <section key={group.category} className="item-picker__cat">
+                <h3>{group.label}</h3>
+                <div className="chip-row chip-icon-row">
+                  {group.items.map((item) => {
+                    const kind = presetKindOf(item.id)
+                    const on = kind
+                      ? kindSelected(kind, value.items)
+                      : value.items.includes(item.id)
+                    return (
+                      <Chip
+                        key={item.id}
+                        icon={<img src={item.icon} alt="" />}
+                        on={on}
+                        onClick={() => onToggleItem(item.id)}
+                      >
+                        {item.label}
+                      </Chip>
+                    )
+                  })}
+                </div>
+                {kinds.map((kind) => (
+                  <ItemPresetRow
+                    key={kind}
+                    kind={kind}
+                    presets={value.itemPresets}
+                    onChange={onSetPreset}
+                  />
                 ))}
-              </div>
-            </section>
-          ))}
-          <ItemLoadSummary items={value.items} />
+              </section>
+            )
+          })}
+          <ItemLoadSummary items={value.items} presets={value.itemPresets} />
         </div>
       ) : null}
 

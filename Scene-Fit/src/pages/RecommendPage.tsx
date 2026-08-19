@@ -4,6 +4,7 @@ import { ConditionsWizard } from '../components/ConditionsWizard'
 import { ProductCard } from '../components/ProductCard'
 import { StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
+import { applyItemToggle, applyPresetChange, type PresetKind } from '../data/itemPresets'
 import { PRODUCTS } from '../data/products'
 import { CONDITION_STEPS, initialWizardStep } from '../lib/conditionsWizard'
 import { runFitCheck } from '../lib/fitCheck'
@@ -16,6 +17,7 @@ export function RecommendPage() {
     scene: null,
     mobility: null,
     items: ['phone', 'wallet'],
+    itemPresets: {},
     wearStyle: null,
     destination: '',
     rewearScene: null,
@@ -46,10 +48,15 @@ export function RecommendPage() {
   const toggleItem = (item: ItemId) => {
     setDraft((prev) => ({
       ...prev,
-      items: prev.items.includes(item)
-        ? prev.items.filter((value) => value !== item)
-        : [...prev.items, item],
+      items: applyItemToggle(prev.items, item, prev.itemPresets),
     }))
+  }
+
+  const setPreset = (kind: PresetKind, presetId: string) => {
+    setDraft((prev) => {
+      const next = applyPresetChange(prev.items, prev.itemPresets, kind, presetId)
+      return { ...prev, items: next.items, itemPresets: next.itemPresets }
+    })
   }
 
   return (
@@ -76,6 +83,7 @@ export function RecommendPage() {
         onStepChange={setStep}
         onChange={(patch) => setDraft((prev) => ({ ...prev, ...patch }))}
         onToggleItem={toggleItem}
+        onSetPreset={setPreset}
       />
 
       {step === 4 && submitted && candidates.length === 0 ? (
