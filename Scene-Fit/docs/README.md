@@ -19,7 +19,7 @@ MCM SCENE FIT의 프론트엔드 앱입니다. 기획·기능 명세는 저장�
 | 제품 데이터 · UI | 완료 | 공식몰 검수 P0 가방 10개, 착용·색상·가격 필터, 색상 스위처 |
 | P0 서비스 기능 | 대부분 완료 | 조건 위저드·Carry Check 4단계·Fit Card·비교·Fit Pass 완료. 미리보기 비율·자세 합성은 다듬는 중 |
 | Carry Check Engine | 완료 | 공식 수납 / 치수 85%·100% 임계 / 수납 지표 점수·품목 배지 |
-| API 명세 | 완료 | [API.md](./API.md) v1.0 — 프론트 타입과 enum 맞춤 |
+| API 명세 | 완료 | [API.md](./API.md) v1.2 — 프론트 타입과 enum 맞춤 |
 | 백엔드 연동 | 미착수 | Zustand + `src/data` 목업만 사용. 세션·Fit Check·Fit Pass API 미연결 |
 | P1 / P2 | 미착수 | 수납 **시각화**(배치 그림), 배경 프리셋, 재고 연동, 생성형 착용 등 |
 
