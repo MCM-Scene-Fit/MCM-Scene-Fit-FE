@@ -10,7 +10,7 @@ import { SCENES } from '../types'
 
 export function ConditionsPage() {
   const navigate = useNavigate()
-  const { conditions, setConditions, toggleItem, conditionsReady } = useFlow()
+  const { conditions, setConditions, toggleItem, setItemPreset, conditionsReady } = useFlow()
   const [step, setStep] = useState(() => initialWizardStep(conditions))
   const current = CONDITION_STEPS[step - 1]
 
@@ -29,6 +29,7 @@ export function ConditionsPage() {
         onStepChange={setStep}
         onChange={setConditions}
         onToggleItem={toggleItem}
+        onSetPreset={setItemPreset}
       >
         <div className="wizard-extras">
           <label className="text-field">

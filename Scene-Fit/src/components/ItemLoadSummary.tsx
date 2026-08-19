@@ -1,13 +1,19 @@
 import { formatCarryLoad, sumCarryLoad } from '../data/items'
-import type { ItemId } from '../types'
+import { resolveCarryItem } from '../data/itemPresets'
+import type { ItemId, ItemPresets } from '../types'
 
 type ItemLoadSummaryProps = {
   items: ItemId[]
+  presets?: ItemPresets
   compact?: boolean
 }
 
-export function ItemLoadSummary({ items, compact = false }: ItemLoadSummaryProps) {
-  const load = sumCarryLoad(items)
+export function ItemLoadSummary({
+  items,
+  presets = {},
+  compact = false,
+}: ItemLoadSummaryProps) {
+  const load = sumCarryLoad(items, (id) => resolveCarryItem(id, presets))
 
   return (
     <aside className={`item-load ${compact ? 'item-load--compact' : ''}`}>

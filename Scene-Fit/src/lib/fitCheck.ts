@@ -1,4 +1,5 @@
-import { CARRY_SCORE_POINTS, ITEM_LABEL, SCENE_LABEL, WEAR_LABEL } from '../data/labels'
+import { itemDisplayLabel, isCanonicalPreset, resolveCarryItem } from '../data/itemPresets'
+import { CARRY_SCORE_POINTS, SCENE_LABEL, WEAR_LABEL } from '../data/labels'
 import { sumCarryLoad } from '../data/items'
 import { PRODUCTS } from '../data/products'
 import { formatOccupancy, itemFitsProduct, judgeItemFit } from './itemFit'
@@ -12,14 +13,21 @@ import type {
   Product,
 } from '../types'
 
-function verdictForItem(product: Product, item: ItemId): ItemVerdict {
-  const { level, fillRatio } = judgeItemFit(item, product)
-  const name = ITEM_LABEL[item]
+function verdictForItem(product: Product, item: ItemId, conditions: Conditions): ItemVerdict {
+  const spec = resolveCarryItem(item, conditions.itemPresets)
+  const { level, fillRatio } = judgeItemFit(
+    item,
+    product,
+    spec,
+    isCanonicalPreset(item, conditions.itemPresets),
+  )
+  const name = spec.label
   const fill = formatOccupancy(fillRatio)
 
   if (level === 'confirmed') {
     return {
       item,
+      label: name,
       level,
       fillRatio,
       message: `${name} 수납이 공식 확인되었습니다.`,
@@ -29,6 +37,7 @@ function verdictForItem(product: Product, item: ItemId): ItemVerdict {
   if (level === 'unlikely') {
     return {
       item,
+      label: name,
       level,
       fillRatio,
       message:
@@ -41,6 +50,7 @@ function verdictForItem(product: Product, item: ItemId): ItemVerdict {
   if (level === 'estimated') {
     return {
       item,
+      label: name,
       level,
       fillRatio,
       message: `점유 ${fill}로 안정 범위(85% 이하)에 들어가 수납이 예상됩니다.`,
@@ -49,6 +59,7 @@ function verdictForItem(product: Product, item: ItemId): ItemVerdict {
 
   return {
     item,
+    label: name,
     level,
     fillRatio,
     message: `점유 ${fill}라 입구·형태에 따라 달라질 수 있어 매장에서 확인해 주세요.`,
@@ -61,23 +72,24 @@ function carryScore(items: ItemVerdict[]) {
   return Math.round(total / items.length)
 }
 
-function carryHeadline(items: ItemVerdict[]) {
+function carryHeadline(items: ItemVerdict[], conditions: Conditions) {
+  const label = (item: ItemId) => itemDisplayLabel(item, conditions.itemPresets)
   const confirmed = items.filter((item) => item.level === 'confirmed')
   const estimated = items.filter((item) => item.level === 'estimated')
   const store = items.filter((item) => item.level === 'store-check')
   const unlikely = items.filter((item) => item.level === 'unlikely')
 
   if (unlikely.length > 0) {
-    return `${ITEM_LABEL[unlikely[0].item]} 수납은 어려워 보입니다`
+    return `${label(unlikely[0].item)} 수납은 어려워 보입니다`
   }
   if (confirmed.length && store.length) {
-    return `${confirmed.map((item) => ITEM_LABEL[item.item]).join('·')}은 확인됨 / ${store.map((item) => ITEM_LABEL[item.item]).join('·')}은 확인 필요`
+    return `${confirmed.map((item) => label(item.item)).join('·')}은 확인됨 / ${store.map((item) => label(item.item)).join('·')}은 확인 필요`
   }
   if (confirmed.length && estimated.length) {
-    return `${confirmed.map((item) => ITEM_LABEL[item.item]).join('·')}은 확인됨 / ${estimated.map((item) => ITEM_LABEL[item.item]).join('·')}은 예상됨`
+    return `${confirmed.map((item) => label(item.item)).join('·')}은 확인됨 / ${estimated.map((item) => label(item.item)).join('·')}은 예상됨`
   }
   if (confirmed.length) {
-    return `${confirmed.map((item) => ITEM_LABEL[item.item]).join('·')} 수납이 확인됨`
+    return `${confirmed.map((item) => label(item.item)).join('·')} 수납이 확인됨`
   }
   if (estimated.length && store.length === 0) {
     return '선택한 소지품은 크기상 수납이 예상됩니다'
@@ -118,7 +130,7 @@ function findAlternative(product: Product, conditions: Conditions) {
       if (scene && candidate.sceneTags.includes(scene)) score += 3
       score += items.filter((item) => candidate.officialStorage.includes(item)).length
       if (wear && !candidate.wearStyles.includes(wear)) score -= 5
-      if (items.some((item) => !itemFitsProduct(item, candidate))) score -= 4
+      if (items.some((item) => !itemFitsProduct(item, candidate, resolveCarryItem(item, conditions.itemPresets)))) score -= 4
       return { candidate, score }
     })
     .sort((a, b) => b.score - a.score)
@@ -142,20 +154,20 @@ export function runFitCheck(product: Product, conditions: Conditions): FitResult
     status: sceneStatus(Boolean(scene), scenePositive),
   }
 
-  const itemVerdicts = conditions.items.map((item) => verdictForItem(product, item))
+  const itemVerdicts = conditions.items.map((item) => verdictForItem(product, item, conditions))
   const wearOk = Boolean(
     conditions.wearStyle && product.wearStyles.includes(conditions.wearStyle),
   )
 
   const carryCheck = {
     headline: wearOk
-      ? carryHeadline(itemVerdicts)
+      ? carryHeadline(itemVerdicts, conditions)
       : conditions.wearStyle
         ? `${WEAR_LABEL[conditions.wearStyle]} 착용은 이 제품의 기본 방식이 아닙니다`
-        : carryHeadline(itemVerdicts),
+        : carryHeadline(itemVerdicts, conditions),
     items: itemVerdicts,
     status: carryStatus(itemVerdicts, wearOk, Boolean(conditions.wearStyle)),
-    load: sumCarryLoad(conditions.items),
+    load: sumCarryLoad(conditions.items, (id) => resolveCarryItem(id, conditions.itemPresets)),
     score: carryScore(itemVerdicts),
   }
 

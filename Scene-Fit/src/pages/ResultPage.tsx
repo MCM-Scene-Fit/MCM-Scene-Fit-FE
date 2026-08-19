@@ -4,9 +4,10 @@ import { AxisMeter, AxisPill } from '../components/AxisMeter'
 import { FitPassRequestModal } from '../components/FitPassRequestModal'
 import { ItemLoadSummary } from '../components/ItemLoadSummary'
 import { ProductMini } from '../components/ProductCard'
+import { StorageCanvas } from '../components/StorageCanvas'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
-import { EVIDENCE_BADGE, EVIDENCE_LABEL, ITEM_LABEL } from '../data/labels'
+import { EVIDENCE_BADGE, EVIDENCE_LABEL } from '../data/labels'
 import { getProduct } from '../data/products'
 import { evidenceTone, runFitCheck } from '../lib/fitCheck'
 import { formatOccupancy } from '../lib/itemFit'
@@ -79,7 +80,7 @@ function VerdictTag({ verdict }: { verdict: ItemVerdict }) {
   return (
     <li className={`verdict-row verdict-row--${tone}`}>
       <div className="verdict-row__copy">
-        <span>{ITEM_LABEL[verdict.item]}</span>
+        <span>{verdict.label}</span>
         <small>{meta}</small>
       </div>
       <span className={`verdict-badge verdict-badge--${tone}`}>
@@ -93,7 +94,7 @@ function VerdictTag({ verdict }: { verdict: ItemVerdict }) {
 export function ResultPage() {
   const navigate = useNavigate()
   const [passOpen, setPassOpen] = useState(false)
-  const { selectedProduct, selectedColorId, conditions, conditionsReady, startQuickDemo } =
+  const { selectedProduct, selectedColorId, conditions, conditionsReady, startQuickDemo, setItemPreset } =
     useFlow()
   const product = selectedProduct
 
@@ -145,7 +146,7 @@ export function ResultPage() {
           ) : (
             <p className="muted">선택한 소지품이 없으면 매장에서 수납을 확인해 주세요.</p>
           )}
-          <ItemLoadSummary items={conditions.items} compact />
+          <ItemLoadSummary items={conditions.items} presets={conditions.itemPresets} compact />
         </AxisCard>
         <AxisCard
           label="Rewear Potential"
@@ -155,6 +156,14 @@ export function ResultPage() {
           <p className="muted">{result.rewearPotential.detail}</p>
         </AxisCard>
       </section>
+
+      <StorageCanvas
+        product={product}
+        colorId={selectedColorId ?? undefined}
+        items={conditions.items}
+        itemPresets={conditions.itemPresets}
+        onSetPreset={setItemPreset}
+      />
 
       <section className="result-notes" aria-label="결과 요약">
         <NoteCard

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { getProduct, PRODUCTS } from '../data/products'
+import { applyItemToggle, applyPresetChange, type PresetKind } from '../data/itemPresets'
 import { silhouetteBagAnchor } from '../lib/wearAnchor'
 import type {
   BodyProfile,
@@ -41,6 +42,7 @@ type FlowActions = {
   setBag: (bag: Partial<BagTransform>) => void
   setConditions: (patch: Partial<Conditions>) => void
   toggleItem: (item: ItemId) => void
+  setItemPreset: (kind: PresetKind, presetId: string) => void
   setFitPass: (patch: Partial<FitPassDraft>) => void
   toggleExperience: (experience: FitPassExperience) => void
   submitFitPass: (storeChecks: string[]) => void
@@ -55,6 +57,7 @@ const defaultConditions: Conditions = {
   scene: null,
   mobility: null,
   items: [],
+  itemPresets: {},
   wearStyle: null,
   destination: '',
   rewearScene: null,
@@ -127,13 +130,23 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
     set({ conditions: { ...get().conditions, ...patch } }),
 
   toggleItem: (item) => {
-    const items = get().conditions.items
+    const { items, itemPresets } = get().conditions
     set({
       conditions: {
         ...get().conditions,
-        items: items.includes(item)
-          ? items.filter((value) => value !== item)
-          : [...items, item],
+        items: applyItemToggle(items, item, itemPresets),
+      },
+    })
+  },
+
+  setItemPreset: (kind, presetId) => {
+    const { items, itemPresets } = get().conditions
+    const next = applyPresetChange(items, itemPresets, kind, presetId)
+    set({
+      conditions: {
+        ...get().conditions,
+        items: next.items,
+        itemPresets: next.itemPresets,
       },
     })
   },
@@ -179,6 +192,7 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
         scene: 'travel',
         mobility: 'light-walk',
         items: ['phone', 'wallet', 'camera'],
+        itemPresets: {},
         wearStyle: 'crossbody',
         destination: '도쿄, 10월',
         rewearScene: 'daily',
