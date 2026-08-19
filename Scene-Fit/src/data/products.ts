@@ -300,3 +300,8 @@ export function bagCardScale(product: Product) {
   const largest = Math.max(...PRODUCTS.map((item) => Math.max(item.widthMm, item.heightMm)))
   return Math.max(0.58, Math.max(product.widthMm, product.heightMm) / largest)
 }
+
+export function bagImageRatio(product: Product, colorId?: string) {
+  const color = getColor(product, colorId ?? product.colors[0].id)
+  return `${color.imageWidth} / ${color.imageHeight}`
+}

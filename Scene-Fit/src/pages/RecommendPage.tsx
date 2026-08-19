@@ -62,6 +62,7 @@ export function RecommendPage() {
   return (
     <main className={`page ${step >= 3 ? 'has-sticky' : ''}`}>
       <header className="step-header">
+        <p className="brand-mark">SCENE FIT</p>
         <div className="step-header__top">
           <button
             type="button"

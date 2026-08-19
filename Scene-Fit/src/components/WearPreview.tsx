@@ -329,6 +329,7 @@ export function WearPreview({
             <span>이 기기에서 자세를 읽어, 가방을 어깨·손·허리에 올립니다.</span>
           </button>
         ) : null}
+        <p className="preview-sticker">미리보기입니다</p>
       </div>
       {status === 'fallback' ? (
         <p className="preview-hint">자세를 찾지 못했습니다. 가방을 직접 옮겨 주세요.</p>

@@ -85,12 +85,20 @@ export const EVIDENCE_LABEL: Record<EvidenceLevel, string> = {
   unlikely: '어려움',
 }
 
-export const EVIDENCE_BADGE: Record<EvidenceLevel, string> = {
-  confirmed: '🟢',
-  estimated: '🔵',
-  'store-check': '🟡',
-  unlikely: '🔴',
-}
+export const AXIS_CODE = {
+  sceneMatch: 'SCN',
+  carryCheck: 'CRY',
+  rewearPotential: 'RWR',
+} as const
+
+export const FLOW_STEPS = [
+  { step: 1, code: 'BAG', label: '제품' },
+  { step: 2, code: 'TRY', label: '미리보기' },
+  { step: 3, code: 'ASK', label: '조건' },
+  { step: 4, code: 'FIT', label: 'Fit Card' },
+  { step: 5, code: 'CMP', label: '비교' },
+  { step: 6, code: 'PAS', label: 'Pass' },
+] as const
 
 export const CARRY_SCORE_POINTS: Record<EvidenceLevel, number> = {
   confirmed: 100,

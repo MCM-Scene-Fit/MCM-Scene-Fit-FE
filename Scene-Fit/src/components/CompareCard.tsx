@@ -1,15 +1,10 @@
 import type { CSSProperties, ReactNode } from 'react'
-import {
-  EVIDENCE_BADGE,
-  EVIDENCE_LABEL,
-  WEAR_LABEL,
-  formatPrice,
-} from '../data/labels'
-import { bagCardScale, getColor } from '../data/products'
-import { evidenceTone } from '../lib/fitCheck'
+import { WEAR_LABEL, formatPrice } from '../data/labels'
+import { bagCardScale, bagImageRatio, getColor } from '../data/products'
 import { formatOccupancy } from '../lib/itemFit'
 import type { AxisStatus, FitResult, ItemVerdict, Product } from '../types'
 import { AxisMeter, AxisPill } from './AxisMeter'
+import { EvidenceBadge } from './EvidenceBadge'
 import { ProductImage } from './ProductImage'
 
 export type CompareSide = {
@@ -32,7 +27,12 @@ function ComparePreview({ badge, product, colorId }: Omit<CompareSide, 'result'>
       <span className="compare-preview__badge">{badge}</span>
       <div
         className="compare-preview__visual"
-        style={{ '--bag-scale': String(bagCardScale(product)) } as CSSProperties}
+        style={
+          {
+            '--bag-scale': String(bagCardScale(product)),
+            '--bag-ratio': bagImageRatio(product, color.id),
+          } as CSSProperties
+        }
       >
         <div className="compare-preview__bag">
           <ProductImage product={product} colorId={color.id} decorative />
@@ -65,15 +65,17 @@ function AxisCell({
   label,
   status,
   headline,
+  differ,
   children,
 }: {
   label: string
   status: AxisStatus
   headline: string
+  differ?: boolean
   children?: ReactNode
 }) {
   return (
-    <div className={`compare-cell compare-cell--${status}`}>
+    <div className={`compare-cell compare-cell--${status}${differ ? ' is-diff' : ''}`}>
       <div className="compare-cell__top">
         <AxisPill status={status} />
       </div>
@@ -101,19 +103,13 @@ function ItemBadges({ items }: { items: ItemVerdict[] }) {
 
   return (
     <ul className="compare-items">
-      {items.map((item) => {
-        const tone = evidenceTone(item.level)
-        return (
-          <li key={item.item} className={`compare-item compare-item--${tone}`}>
-            <span>{item.label}</span>
-            <span className={`verdict-badge verdict-badge--${tone}`}>
-              <span aria-hidden="true">{EVIDENCE_BADGE[item.level]}</span>
-              {EVIDENCE_LABEL[item.level]}
-            </span>
-            <small>점유 {formatOccupancy(item.fillRatio)}</small>
-          </li>
-        )
-      })}
+      {items.map((item) => (
+        <li key={item.item} className={`compare-item compare-item--${item.level}`}>
+          <span>{item.label}</span>
+          <EvidenceBadge level={item.level} />
+          <small>점유 {formatOccupancy(item.fillRatio)}</small>
+        </li>
+      ))}
     </ul>
   )
 }
@@ -145,6 +141,13 @@ function PriceCell({ product }: { product: Product }) {
 
 export function CompareCard({ selected, alternative }: CompareCardProps) {
   const sides = [selected, alternative]
+  const sceneDiff = selected.result.sceneMatch.status !== alternative.result.sceneMatch.status
+  const carryDiff =
+    selected.result.carryCheck.status !== alternative.result.carryCheck.status ||
+    selected.result.carryCheck.score !== alternative.result.carryCheck.score
+  const rewearDiff =
+    selected.result.rewearPotential.status !== alternative.result.rewearPotential.status
+  const priceDiff = selected.product.price !== alternative.product.price
 
   return (
     <article className="compare-card">
@@ -166,6 +169,7 @@ export function CompareCard({ selected, alternative }: CompareCardProps) {
             label="Scene Match"
             status={side.result.sceneMatch.status}
             headline={side.result.sceneMatch.headline}
+            differ={sceneDiff}
           />
         ))}
       </CompareRow>
@@ -177,6 +181,7 @@ export function CompareCard({ selected, alternative }: CompareCardProps) {
             label="Carry Check"
             status={side.result.carryCheck.status}
             headline={side.result.carryCheck.headline}
+            differ={carryDiff}
           >
             <CarryScore score={side.result.carryCheck.score} />
           </AxisCell>
@@ -190,6 +195,7 @@ export function CompareCard({ selected, alternative }: CompareCardProps) {
             label="Rewear Potential"
             status={side.result.rewearPotential.status}
             headline={side.result.rewearPotential.headline}
+            differ={rewearDiff}
           />
         ))}
       </CompareRow>
@@ -208,7 +214,12 @@ export function CompareCard({ selected, alternative }: CompareCardProps) {
 
       <CompareRow label="가격">
         {sides.map((side) => (
-          <PriceCell key={side.product.id} product={side.product} />
+          <div
+            key={side.product.id}
+            className={priceDiff ? 'compare-price-wrap is-diff' : 'compare-price-wrap'}
+          >
+            <PriceCell product={side.product} />
+          </div>
         ))}
       </CompareRow>
     </article>

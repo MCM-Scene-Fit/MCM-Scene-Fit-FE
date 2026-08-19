@@ -50,7 +50,7 @@ export function ProductsPage() {
 
       {products.length === 0 ? (
         <p className="empty-note">
-          선택한 필터에 맞는 가방이 없습니다. 형태나 가격 조건을 넓혀 보세요.
+          현재 선택한 조건을 모두 만족하는 제품을 찾지 못했습니다. 형태나 가격 조건을 넓혀 보세요.
         </p>
       ) : (
         <div className="product-grid">

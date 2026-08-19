@@ -1,41 +1,17 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AxisMeter, AxisPill } from '../components/AxisMeter'
+import { EvidenceBadge } from '../components/EvidenceBadge'
+import { FitCard } from '../components/FitCard'
 import { FitPassRequestModal } from '../components/FitPassRequestModal'
 import { ItemLoadSummary } from '../components/ItemLoadSummary'
 import { ProductMini } from '../components/ProductCard'
 import { StorageCanvas } from '../components/StorageCanvas'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
-import { EVIDENCE_BADGE, EVIDENCE_LABEL } from '../data/labels'
 import { getProduct } from '../data/products'
-import { evidenceTone, runFitCheck } from '../lib/fitCheck'
+import { runFitCheck } from '../lib/fitCheck'
 import { formatOccupancy } from '../lib/itemFit'
-import type { AxisStatus, ItemVerdict } from '../types'
-
-function AxisCard({
-  label,
-  status,
-  headline,
-  children,
-}: {
-  label: string
-  status: AxisStatus
-  headline: string
-  children: ReactNode
-}) {
-  return (
-    <article className={`axis-card axis-card--${status}`}>
-      <div className="axis-card__top">
-        <p className="eyebrow">{label}</p>
-        <AxisPill status={status} />
-      </div>
-      <AxisMeter status={status} label={label} />
-      <h3>{headline}</h3>
-      {children}
-    </article>
-  )
-}
+import type { ItemVerdict } from '../types'
 
 function NoteCard({
   tone,
@@ -44,7 +20,7 @@ function NoteCard({
   empty,
   items,
 }: {
-  tone: 'ok' | 'bad' | 'info'
+  tone: 'match' | 'weak' | 'check'
   eyebrow: string
   title: string
   empty: string
@@ -73,20 +49,16 @@ function CarryScore({ score }: { score: number | null }) {
 }
 
 function VerdictTag({ verdict }: { verdict: ItemVerdict }) {
-  const tone = evidenceTone(verdict.level)
   const fill = formatOccupancy(verdict.fillRatio)
   const meta = verdict.level === 'confirmed' ? `공식 지원 · 점유 ${fill}` : `점유 ${fill}`
 
   return (
-    <li className={`verdict-row verdict-row--${tone}`}>
+    <li className={`verdict-row verdict-row--${verdict.level}`}>
       <div className="verdict-row__copy">
         <span>{verdict.label}</span>
         <small>{meta}</small>
       </div>
-      <span className={`verdict-badge verdict-badge--${tone}`}>
-        <span aria-hidden="true">{EVIDENCE_BADGE[verdict.level]}</span>
-        {EVIDENCE_LABEL[verdict.level]}
-      </span>
+      <EvidenceBadge level={verdict.level} />
     </li>
   )
 }
@@ -110,12 +82,10 @@ export function ResultPage() {
     <main className="page has-sticky">
       <StepHeader
         step={4}
-        title="Scene Fit Card"
-        caption="총점 대신 세 축으로 맞는지, 확인할 점을 보여 줍니다."
+        title="이 장면에서의 적합 정도"
+        caption="총점 대신 세 구간으로 맞는지, 확인할 점을 보여 줍니다."
         backTo="/conditions"
       />
-
-      <ProductMini product={product} colorId={selectedColorId ?? undefined} />
 
       {!conditionsReady ? (
         <p className="empty-note">
@@ -123,39 +93,19 @@ export function ResultPage() {
         </p>
       ) : null}
 
-      <section className="fit-axes" aria-label="3축 적합도">
-        <AxisCard
-          label="Scene Match"
-          status={result.sceneMatch.status}
-          headline={result.sceneMatch.headline}
-        >
-          <p className="muted">{result.sceneMatch.detail}</p>
-        </AxisCard>
-        <AxisCard
-          label="Carry Check"
-          status={result.carryCheck.status}
-          headline={result.carryCheck.headline}
-        >
-          {result.carryCheck.score != null ? <CarryScore score={result.carryCheck.score} /> : null}
-          {result.carryCheck.items.length ? (
-            <ul className="verdicts">
-              {result.carryCheck.items.map((item) => (
-                <VerdictTag key={item.item} verdict={item} />
-              ))}
-            </ul>
-          ) : (
-            <p className="muted">선택한 소지품이 없으면 매장에서 수납을 확인해 주세요.</p>
-          )}
-          <ItemLoadSummary items={conditions.items} presets={conditions.itemPresets} compact />
-        </AxisCard>
-        <AxisCard
-          label="Rewear Potential"
-          status={result.rewearPotential.status}
-          headline={result.rewearPotential.headline}
-        >
-          <p className="muted">{result.rewearPotential.detail}</p>
-        </AxisCard>
-      </section>
+      <FitCard product={product} colorId={selectedColorId ?? undefined} result={result}>
+        {result.carryCheck.score != null ? <CarryScore score={result.carryCheck.score} /> : null}
+        {result.carryCheck.items.length ? (
+          <ul className="verdicts">
+            {result.carryCheck.items.map((item) => (
+              <VerdictTag key={item.item} verdict={item} />
+            ))}
+          </ul>
+        ) : (
+          <p className="muted">선택한 소지품이 없으면 매장에서 수납을 확인해 주세요.</p>
+        )}
+        <ItemLoadSummary items={conditions.items} presets={conditions.itemPresets} compact />
+      </FitCard>
 
       <StorageCanvas
         product={product}
@@ -167,21 +117,21 @@ export function ResultPage() {
 
       <section className="result-notes" aria-label="결과 요약">
         <NoteCard
-          tone="ok"
+          tone="match"
           eyebrow="잘 맞음"
           title="이 가방이 잘 맞는 이유"
           empty="선택한 조건과 강하게 겹치는 공식 근거는 아직 적습니다."
           items={result.matches}
         />
         <NoteCard
-          tone="bad"
+          tone="weak"
           eyebrow="안 맞음"
           title="가장 안 맞는 조건"
           empty="필수 조건에서 뚜렷한 불일치는 없습니다."
           items={result.mismatches}
         />
         <NoteCard
-          tone="info"
+          tone="check"
           eyebrow="매장 확인"
           title="매장에서 확인할 점"
           empty="지금 단계에서 따로 확인할 항목은 없습니다."
@@ -207,7 +157,7 @@ export function ResultPage() {
             대안과 비교
           </button>
           <button type="button" className="btn btn-primary" onClick={() => setPassOpen(true)}>
-            Fit Pass 만들기
+            매장 체험 요청하기
           </button>
         </div>
         {!conditionsReady ? (

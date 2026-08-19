@@ -24,6 +24,7 @@ export function ProductImage({
       className={className}
       draggable={false}
       aria-hidden={decorative || undefined}
+      style={{ objectFit: 'contain', objectPosition: 'center' }}
     />
   )
 }

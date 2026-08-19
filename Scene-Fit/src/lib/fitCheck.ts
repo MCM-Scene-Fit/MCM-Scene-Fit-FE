@@ -238,9 +238,17 @@ export function runFitCheck(product: Product, conditions: Conditions): FitResult
   }
 }
 
-export function evidenceTone(level: EvidenceLevel) {
-  if (level === 'confirmed') return 'ok'
-  if (level === 'estimated') return 'estimated'
-  if (level === 'unlikely') return 'bad'
-  return 'warn'
+export function resultEvidence(result: FitResult): EvidenceLevel {
+  const levels = result.carryCheck.items.map((item) => item.level)
+  if (levels.includes('unlikely')) return 'unlikely'
+  if (levels.includes('store-check')) return 'store-check'
+  if (levels.includes('estimated')) return 'estimated'
+  if (levels.length > 0 && levels.every((level) => level === 'confirmed')) return 'confirmed'
+  if (result.sceneMatch.status === 'weak' || result.rewearPotential.status === 'weak') {
+    return 'store-check'
+  }
+  if (result.sceneMatch.status === 'match' && result.carryCheck.status === 'match') {
+    return 'confirmed'
+  }
+  return 'estimated'
 }
