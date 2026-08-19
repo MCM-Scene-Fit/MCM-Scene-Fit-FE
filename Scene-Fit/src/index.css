@@ -261,6 +261,65 @@ p {
   grid-template-columns: 1fr;
 }
 
+.accordion {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--white);
+  overflow: hidden;
+}
+
+.accordion__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 18px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.accordion__copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.accordion__copy strong {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.accordion__copy em {
+  font-style: normal;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.accordion__chevron {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-right: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease, margin-top 0.2s ease;
+}
+
+.accordion.is-open .accordion__chevron {
+  margin-top: 4px;
+  transform: rotate(225deg);
+}
+
+.accordion__panel {
+  padding: 0 18px 18px;
+}
+
 .wizard-extras {
   display: grid;
   gap: 18px;
