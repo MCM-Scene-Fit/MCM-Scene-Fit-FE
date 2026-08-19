@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FLOW_STEPS } from '../data/labels'
 
 type StepHeaderProps = {
   step: number
@@ -11,10 +12,24 @@ type StepHeaderProps = {
 
 export function StepHeader({ step, title, caption, backTo, onBack }: StepHeaderProps) {
   const navigate = useNavigate()
-  const total = 6
+  const current = FLOW_STEPS.find((item) => item.step === step)
 
   return (
     <header className="step-header">
+      <div className="step-header__brand">
+        <p className="brand-mark">SCENE FIT</p>
+        <ol className="step-tags" aria-label="진행 단계">
+          {FLOW_STEPS.map((item) => {
+            const state = item.step === step ? 'is-current' : item.step < step ? 'is-done' : ''
+            return (
+              <li key={item.step} className={state}>
+                <span className="step-tags__code">{item.code}</span>
+              </li>
+            )
+          })}
+        </ol>
+      </div>
+
       <div className="step-header__top">
         <button
           type="button"
@@ -28,13 +43,12 @@ export function StepHeader({ step, title, caption, backTo, onBack }: StepHeaderP
         >
           ←
         </button>
-        <p className="eyebrow">STEP {step} / {total}</p>
+        <p className="eyebrow">
+          {current?.code ?? `STEP ${step}`} · {step} / {FLOW_STEPS.length}
+        </p>
       </div>
       <h1>{title}</h1>
       {caption ? <p className="muted">{caption}</p> : null}
-      <div className="progress" aria-hidden="true">
-        <span style={{ width: `${(step / total) * 100}%` }} />
-      </div>
     </header>
   )
 }

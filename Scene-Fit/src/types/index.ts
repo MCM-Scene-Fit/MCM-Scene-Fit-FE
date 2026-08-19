@@ -7,16 +7,36 @@ export type Mobility = (typeof MOBILITY)[number]
 export const WEAR_STYLES = ['tote', 'shoulder', 'crossbody', 'backpack'] as const
 export type WearStyle = (typeof WEAR_STYLES)[number]
 
+export const ITEM_CATEGORIES = ['tech', 'beauty', 'drink', 'everyday'] as const
+export type ItemCategory = (typeof ITEM_CATEGORIES)[number]
+
 export const ITEMS = [
   'phone',
-  'wallet',
-  'pouch',
   'tablet',
   'laptop13',
+  'laptop16',
+  'powerbank',
+  'earphones',
   'camera',
+  'pouch',
+  'lipbalm',
+  'sanitizer',
+  'tissues',
   'bottle',
+  'umbrella',
+  'wallet',
+  'keys',
+  'sunglasses',
 ] as const
 export type ItemId = (typeof ITEMS)[number]
+
+export type ItemPresets = Partial<Record<'phone' | 'tablet' | 'laptop' | 'powerbank', string>>
+
+export type CarryLoad = {
+  count: number
+  volumeMl: number
+  weightG: number
+}
 
 export const EVIDENCE = [
   'confirmed',
@@ -34,6 +54,9 @@ export type ProductColor = {
   image: string
   imageWidth: number
   imageHeight: number
+  sideImage: string
+  sideImageWidth: number
+  sideImageHeight: number
 }
 
 export type Product = {
@@ -64,6 +87,7 @@ export type Conditions = {
   scene: Scene | null
   mobility: Mobility | null
   items: ItemId[]
+  itemPresets: ItemPresets
   wearStyle: WearStyle | null
   destination: string
   rewearScene: Scene | null
@@ -81,8 +105,11 @@ export type BodyProfile = {
 
 export type ItemVerdict = {
   item: ItemId
+  label: string
   level: EvidenceLevel
   message: string
+  /** 축 정렬 회전 후 가장 빡센 축 점유율. 1을 넘으면 가방 치수 초과. */
+  fillRatio: number
 }
 
 export const AXIS_STATUSES = ['match', 'check', 'weak'] as const
@@ -90,7 +117,14 @@ export type AxisStatus = (typeof AXIS_STATUSES)[number]
 
 export type FitResult = {
   sceneMatch: { headline: string; detail: string; positive: boolean; status: AxisStatus }
-  carryCheck: { headline: string; items: ItemVerdict[]; status: AxisStatus }
+  carryCheck: {
+    headline: string
+    items: ItemVerdict[]
+    status: AxisStatus
+    load: CarryLoad
+    /** 품목 판정 평균(0–100). 소지품이 없으면 null. */
+    score: number | null
+  }
   rewearPotential: { headline: string; detail: string; positive: boolean; status: AxisStatus }
   matches: string[]
   mismatches: string[]
@@ -110,6 +144,12 @@ export type FitPassDraft = {
   visitTime: string
   experiences: FitPassExperience[]
   customNote: string
+}
+
+export type FitPassIssued = {
+  id: string
+  storeChecks: string[]
+  createdAt: string
 }
 
 export type FitPassStatus = 'requested' | 'checking' | 'confirmed'

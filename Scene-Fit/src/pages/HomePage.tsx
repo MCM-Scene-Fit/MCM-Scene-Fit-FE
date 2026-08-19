@@ -18,6 +18,20 @@ export function HomePage() {
           내 모습과 소지품, 이동 장면으로 먼저 확인하고
           매장에서 확신하세요.
         </p>
+        <ol className="home-route" aria-label="검증 구간">
+          <li>
+            <span>SCN</span>
+            장면
+          </li>
+          <li>
+            <span>CRY</span>
+            수납
+          </li>
+          <li>
+            <span>RWR</span>
+            재사용
+          </li>
+        </ol>
       </section>
 
       <section className="home-panel">

@@ -1,8 +1,10 @@
+import { CARRY_ITEMS } from './items'
 import type {
   AxisStatus,
   BodyBuild,
   EvidenceLevel,
   FitPassExperience,
+  FitPassStatus,
   ItemId,
   Mobility,
   Scene,
@@ -72,31 +74,37 @@ export const WEAR_HINT: Record<WearStyle, string> = {
   backpack: '무게를 분산해 장거리 이동에 편함',
 }
 
-export const ITEM_LABEL: Record<ItemId, string> = {
-  phone: '휴대전화',
-  wallet: '지갑',
-  pouch: '파우치',
-  tablet: '태블릿',
-  laptop13: '13인치 노트북',
-  camera: '소형 카메라',
-  bottle: '350mL 물병',
-}
-
-export const ITEM_ICON: Record<ItemId, string> = {
-  phone: '📱',
-  wallet: '💳',
-  pouch: '👝',
-  tablet: '📲',
-  laptop13: '💻',
-  camera: '📷',
-  bottle: '💧',
-}
+export const ITEM_LABEL: Record<ItemId, string> = Object.fromEntries(
+  CARRY_ITEMS.map((item) => [item.id, item.label]),
+) as Record<ItemId, string>
 
 export const EVIDENCE_LABEL: Record<EvidenceLevel, string> = {
   confirmed: '확인됨',
   estimated: '예상됨',
   'store-check': '매장 확인 필요',
   unlikely: '어려움',
+}
+
+export const AXIS_CODE = {
+  sceneMatch: 'SCN',
+  carryCheck: 'CRY',
+  rewearPotential: 'RWR',
+} as const
+
+export const FLOW_STEPS = [
+  { step: 1, code: 'BAG', label: '제품' },
+  { step: 2, code: 'TRY', label: '미리보기' },
+  { step: 3, code: 'ASK', label: '조건' },
+  { step: 4, code: 'FIT', label: 'Fit Card' },
+  { step: 5, code: 'CMP', label: '비교' },
+  { step: 6, code: 'PAS', label: 'Pass' },
+] as const
+
+export const CARRY_SCORE_POINTS: Record<EvidenceLevel, number> = {
+  confirmed: 100,
+  estimated: 80,
+  'store-check': 50,
+  unlikely: 0,
 }
 
 export const AXIS_STATUS_LABEL: Record<AxisStatus, string> = {
@@ -111,6 +119,28 @@ export const EXPERIENCE_LABEL: Record<FitPassExperience, string> = {
   styling: '내 옷과 어울리는 스타일링 제안',
   'color-compare': '다른 색상과 대안 제품 비교',
   care: '제품 관리와 오래 사용하는 방법 상담',
+}
+
+export const FIT_PASS_STATUS_LABEL: Record<FitPassStatus, string> = {
+  requested: '요청 접수',
+  checking: '확인 중',
+  confirmed: '확인 완료',
+}
+
+export const FIT_PASS_STATUSES: FitPassStatus[] = ['requested', 'checking', 'confirmed']
+
+export function formatVisitTime(value: string) {
+  if (!value) return '조율 필요'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
 }
 
 export const STORES = [

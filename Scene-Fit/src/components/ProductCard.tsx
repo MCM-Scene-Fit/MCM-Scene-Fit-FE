@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { formatPrice, WEAR_LABEL } from '../data/labels'
-import { bagCardScale, getColor } from '../data/products'
+import { bagCardScale, bagImageRatio, getColor } from '../data/products'
 import type { Product } from '../types'
 import { ProductImage } from './ProductImage'
 
@@ -31,7 +31,12 @@ export function ProductCard({
       >
         <div
           className="product-card__visual"
-          style={{ '--bag-scale': String(bagCardScale(product)) } as CSSProperties}
+          style={
+            {
+              '--bag-scale': String(bagCardScale(product)),
+              '--bag-ratio': bagImageRatio(product, activeColorId),
+            } as CSSProperties
+          }
         >
           <div className="product-card__bag">
             <ProductImage product={product} colorId={activeColorId} />
@@ -79,13 +84,16 @@ export function ProductCard({
 export function ProductMini({ product, colorId }: { product: Product; colorId?: string }) {
   return (
     <div className="product-mini">
-      <div className="product-mini__visual">
-        <ProductImage product={product} colorId={colorId} />
+      <div
+        className="product-mini__visual"
+        style={{ '--bag-ratio': bagImageRatio(product, colorId) } as CSSProperties}
+      >
+        <ProductImage product={product} colorId={colorId} decorative />
       </div>
-      <div>
+      <div className="product-mini__copy">
         <p className="eyebrow">{product.category}</p>
         <strong>{product.name}</strong>
-        <p className="muted">{formatPrice(product.price)}</p>
+        <p className="price">{formatPrice(product.price)}</p>
       </div>
     </div>
   )

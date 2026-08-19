@@ -1,11 +1,13 @@
 import { create } from 'zustand'
 import { getProduct, PRODUCTS } from '../data/products'
+import { applyItemToggle, applyPresetChange, type PresetKind } from '../data/itemPresets'
 import { silhouetteBagAnchor } from '../lib/wearAnchor'
 import type {
   BodyProfile,
   Conditions,
   FitPassDraft,
   FitPassExperience,
+  FitPassIssued,
   FitPassStatus,
   ItemId,
   PreviewMode,
@@ -27,6 +29,7 @@ type FlowState = {
   bag: BagTransform
   conditions: Conditions
   fitPass: FitPassDraft
+  fitPassIssued: FitPassIssued | null
   fitPassStatus: FitPassStatus | null
 }
 
@@ -39,9 +42,11 @@ type FlowActions = {
   setBag: (bag: Partial<BagTransform>) => void
   setConditions: (patch: Partial<Conditions>) => void
   toggleItem: (item: ItemId) => void
+  setItemPreset: (kind: PresetKind, presetId: string) => void
   setFitPass: (patch: Partial<FitPassDraft>) => void
   toggleExperience: (experience: FitPassExperience) => void
-  submitFitPass: () => void
+  submitFitPass: (storeChecks: string[]) => void
+  setFitPassStatus: (status: FitPassStatus) => void
   startQuickDemo: () => void
   resetFlow: () => void
 }
@@ -52,6 +57,7 @@ const defaultConditions: Conditions = {
   scene: null,
   mobility: null,
   items: [],
+  itemPresets: {},
   wearStyle: null,
   destination: '',
   rewearScene: null,
@@ -83,6 +89,7 @@ const initialState: FlowState = {
   bag: { x: 18, y: 42 },
   conditions: defaultConditions,
   fitPass: defaultFitPass,
+  fitPassIssued: null,
   fitPassStatus: null,
 }
 
@@ -123,13 +130,23 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
     set({ conditions: { ...get().conditions, ...patch } }),
 
   toggleItem: (item) => {
-    const items = get().conditions.items
+    const { items, itemPresets } = get().conditions
     set({
       conditions: {
         ...get().conditions,
-        items: items.includes(item)
-          ? items.filter((value) => value !== item)
-          : [...items, item],
+        items: applyItemToggle(items, item, itemPresets),
+      },
+    })
+  },
+
+  setItemPreset: (kind, presetId) => {
+    const { items, itemPresets } = get().conditions
+    const next = applyPresetChange(items, itemPresets, kind, presetId)
+    set({
+      conditions: {
+        ...get().conditions,
+        items: next.items,
+        itemPresets: next.itemPresets,
       },
     })
   },
@@ -148,7 +165,17 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
     })
   },
 
-  submitFitPass: () => set({ fitPassStatus: 'checking' }),
+  submitFitPass: (storeChecks) =>
+    set({
+      fitPassStatus: 'requested',
+      fitPassIssued: {
+        id: `fp_${Date.now().toString(36)}`,
+        storeChecks,
+        createdAt: new Date().toISOString(),
+      },
+    }),
+
+  setFitPassStatus: (status) => set({ fitPassStatus: status }),
 
   startQuickDemo: () => {
     const product = PRODUCTS[0]
@@ -165,11 +192,13 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
         scene: 'travel',
         mobility: 'light-walk',
         items: ['phone', 'wallet', 'camera'],
+        itemPresets: {},
         wearStyle: 'crossbody',
         destination: '도쿄, 10월',
         rewearScene: 'daily',
       },
       fitPass: defaultFitPass,
+      fitPassIssued: null,
       fitPassStatus: null,
     })
   },
