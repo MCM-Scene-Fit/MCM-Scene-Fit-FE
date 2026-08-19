@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
+import { CompareCard } from '../components/CompareCard'
 import { FitPassRequestModal } from '../components/FitPassRequestModal'
-import { ProductMini } from '../components/ProductCard'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
-import { formatPrice, EVIDENCE_BADGE, EVIDENCE_LABEL, ITEM_LABEL } from '../data/labels'
 import { getProduct } from '../data/products'
 import { runFitCheck } from '../lib/fitCheck'
 
@@ -32,23 +31,6 @@ export function ComparePage() {
     )
   }
 
-  const rows = [
-    ['Scene Match', result.sceneMatch.headline, altResult.sceneMatch.headline],
-    ['Carry Check', result.carryCheck.headline, altResult.carryCheck.headline],
-    [
-      '수납 지표',
-      result.carryCheck.score == null ? '—' : `${result.carryCheck.score}/100`,
-      altResult.carryCheck.score == null ? '—' : `${altResult.carryCheck.score}/100`,
-    ],
-    ['Rewear', result.rewearPotential.headline, altResult.rewearPotential.headline],
-    [
-      '확인 필요',
-      result.storeChecks[0] ?? '없음',
-      altResult.storeChecks[0] ?? '없음',
-    ],
-    ['가격', formatPrice(selected.price), formatPrice(alternative.price)],
-  ]
-
   return (
     <main className="page has-sticky">
       <StepHeader
@@ -58,41 +40,19 @@ export function ComparePage() {
         backTo="/result"
       />
 
-      <div className="compare-heads">
-        <ProductMini product={selected} colorId={selectedColorId ?? undefined} />
-        <ProductMini product={alternative} />
-      </div>
-
-      <table className="compare-table">
-        <tbody>
-          {rows.map(([label, left, right]) => (
-            <tr key={label}>
-              <th>{label}</th>
-              <td>{left}</td>
-              <td>{right}</td>
-            </tr>
-          ))}
-          <tr>
-            <th>소지품</th>
-            <td>
-              {result.carryCheck.items
-                .map(
-                  (item) =>
-                    `${ITEM_LABEL[item.item]} ${EVIDENCE_BADGE[item.level]} ${EVIDENCE_LABEL[item.level]}`,
-                )
-                .join(', ')}
-            </td>
-            <td>
-              {altResult.carryCheck.items
-                .map(
-                  (item) =>
-                    `${ITEM_LABEL[item.item]} ${EVIDENCE_BADGE[item.level]} ${EVIDENCE_LABEL[item.level]}`,
-                )
-                .join(', ')}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <CompareCard
+        selected={{
+          badge: '지금 선택',
+          product: selected,
+          colorId: selectedColorId ?? undefined,
+          result,
+        }}
+        alternative={{
+          badge: '대안',
+          product: alternative,
+          result: altResult,
+        }}
+      />
 
       <StickyBar>
         <div className="btn-row">
