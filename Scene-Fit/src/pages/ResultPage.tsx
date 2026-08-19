@@ -1,40 +1,16 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AxisMeter, AxisPill } from '../components/AxisMeter'
 import { FitPassRequestModal } from '../components/FitPassRequestModal'
 import { ItemLoadSummary } from '../components/ItemLoadSummary'
 import { ProductMini } from '../components/ProductCard'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
-import { AXIS_STATUS_LABEL, EVIDENCE_BADGE, EVIDENCE_LABEL, ITEM_LABEL } from '../data/labels'
+import { EVIDENCE_BADGE, EVIDENCE_LABEL, ITEM_LABEL } from '../data/labels'
 import { getProduct } from '../data/products'
 import { evidenceTone, runFitCheck } from '../lib/fitCheck'
 import { formatOccupancy } from '../lib/itemFit'
 import type { AxisStatus, ItemVerdict } from '../types'
-
-const METER_FILL: Record<AxisStatus, number> = {
-  weak: 1,
-  check: 2,
-  match: 3,
-}
-
-function AxisMeter({ status, label }: { status: AxisStatus; label: string }) {
-  const fill = METER_FILL[status]
-  return (
-    <div
-      className={`axis-meter axis-meter--${status}`}
-      role="meter"
-      aria-label={`${label} ${AXIS_STATUS_LABEL[status]}`}
-      aria-valuemin={1}
-      aria-valuemax={3}
-      aria-valuenow={fill}
-      aria-valuetext={AXIS_STATUS_LABEL[status]}
-    >
-      {[1, 2, 3].map((step) => (
-        <span key={step} className={step <= fill ? 'is-on' : undefined} />
-      ))}
-    </div>
-  )
-}
 
 function AxisCard({
   label,
@@ -51,7 +27,7 @@ function AxisCard({
     <article className={`axis-card axis-card--${status}`}>
       <div className="axis-card__top">
         <p className="eyebrow">{label}</p>
-        <span className={`axis-pill axis-pill--${status}`}>{AXIS_STATUS_LABEL[status]}</span>
+        <AxisPill status={status} />
       </div>
       <AxisMeter status={status} label={label} />
       <h3>{headline}</h3>
