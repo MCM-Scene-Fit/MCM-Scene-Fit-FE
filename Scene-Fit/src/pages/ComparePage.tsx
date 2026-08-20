@@ -14,7 +14,7 @@ export function ComparePage() {
   if (!selected || !compared.selected || !compared.alternative) {
     return (
       <main className="page">
-        <StepHeader step={5} title="비교" backTo="/result" />
+        <StepHeader variant="catalog" step={5} title="비교" backTo="/result" />
         <p className="empty-note">
           {compared.message ?? '비교할 대안 제품이 없습니다. 결과 화면으로 돌아가 주세요.'}
         </p>
@@ -28,6 +28,7 @@ export function ComparePage() {
   return (
     <main className="page has-sticky">
       <StepHeader
+        variant="catalog"
         step={5}
         title="같은 기준으로 비교하세요"
         caption="대표 제품을 억지로 고르지 않습니다. 확인할 점까지 함께 봅니다."

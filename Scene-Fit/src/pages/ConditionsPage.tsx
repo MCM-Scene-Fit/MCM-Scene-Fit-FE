@@ -26,9 +26,10 @@ export function ConditionsPage() {
   return (
     <main className={`page ${step >= 3 ? 'has-sticky' : ''}`}>
       <StepHeader
+        variant="catalog"
         step={3}
         title={current.title}
-        caption={`필수 ${step}/4 · ${current.caption}`}
+        caption={current.caption}
         onBack={() => (step === 1 ? navigate('/preview') : setStep(step - 1))}
       />
 

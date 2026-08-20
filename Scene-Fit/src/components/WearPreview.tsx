@@ -13,8 +13,8 @@ import {
   type BodyAnalysis,
 } from '../lib/bodyAnalysis'
 import { bagBoxPx, containedSize, HEIGHT_MAX_CM, personHeightPx } from '../lib/previewFit'
-import { silhouetteBagAnchor, wearAnchorFromPose } from '../lib/wearAnchor'
-import type { BodyProfile, PreviewMode, Product, WearStyle } from '../types'
+import { getColor } from '../data/products'
+import type { BodyProfile, PreviewMode, Product } from '../types'
 import { ProductImage } from './ProductImage'
 
 type BagTransform = {
@@ -28,7 +28,6 @@ type WearPreviewProps = {
   mode: PreviewMode
   photoUrl: string | null
   body: BodyProfile
-  wearStyle: WearStyle
   bag: BagTransform
   onBagChange: (bag: Partial<BagTransform>) => void
   onUploadClick: () => void
@@ -56,7 +55,6 @@ export function WearPreview({
   mode,
   photoUrl,
   body,
-  wearStyle,
   bag,
   onBagChange,
   onUploadClick,
@@ -101,9 +99,7 @@ export function WearPreview({
     mode === 'photo' && figure.url === photoUrl ? figure : EMPTY_BOX
   const bagBox = mode === 'photo' ? photoBagBox : silhouetteBagBox
   const showBag = mode === 'silhouette' || Boolean(photoUrl)
-  const bagBehind = Boolean(
-    activeAnalysis && wearAnchorFromPose(wearStyle, activeAnalysis.landmarks).behindPerson,
-  )
+  const color = getColor(product, colorId)
 
   const measureBag = useEffectEvent(() => {
     const stage = stageRef.current
@@ -128,7 +124,13 @@ export function WearPreview({
       const ratio = analysis?.url === photoUrl ? analysis.body.personHeightRatio : null
       const avatarPx = nextFigure.height * (ratio ?? 0.9)
       if (avatarPx <= 0) return
-      const nextBox = bagBoxPx(product, avatarPx, body.heightCm)
+      const nextBox = bagBoxPx(
+        product,
+        avatarPx,
+        body.heightCm,
+        color.imageWidth,
+        color.imageHeight,
+      )
       setPhotoBagBox((prev) => (sameBox(prev, nextBox) ? prev : nextBox))
       return
     }
@@ -141,7 +143,13 @@ export function WearPreview({
       silhouette: silhouetteRef.current,
     })
     if (avatarPx <= 0) return
-    const nextBox = bagBoxPx(product, avatarPx, body.heightCm)
+    const nextBox = bagBoxPx(
+      product,
+      avatarPx,
+      body.heightCm,
+      color.imageWidth,
+      color.imageHeight,
+    )
     setSilhouetteBagBox((prev) => (sameBox(prev, nextBox) ? prev : nextBox))
   })
 
@@ -157,21 +165,7 @@ export function WearPreview({
       cancelAnimationFrame(frame)
       observer.disconnect()
     }
-  }, [mode, photoUrl, product, body.heightCm, activeAnalysis])
-
-  useEffect(() => {
-    if (mode === 'silhouette') {
-      const anchor = silhouetteBagAnchor(wearStyle)
-      onBagChange({ x: anchor.x, y: anchor.y })
-      return
-    }
-    if (!activeAnalysis) return
-    const anchor = wearAnchorFromPose(wearStyle, activeAnalysis.landmarks)
-    onBagChange({
-      x: clamp(anchor.x, BAG_X_MIN, BAG_X_MAX),
-      y: clamp(anchor.y, BAG_Y_MIN, BAG_Y_MAX),
-    })
-  }, [mode, wearStyle, activeAnalysis, onBagChange])
+  }, [mode, photoUrl, product, colorId, body.heightCm, activeAnalysis])
 
   useEffect(() => {
     const canvas = cutoutRef.current
@@ -258,7 +252,7 @@ export function WearPreview({
   const bagNode =
     showBag && bagBox.width > 0 ? (
       <div
-        className={`bag-layer ${dragging ? 'is-dragging' : ''} ${bagBehind ? 'is-behind' : ''}`}
+        className={`bag-layer ${dragging ? 'is-dragging' : ''}`}
         style={{
           left: `${bag.x}%`,
           top: `${bag.y}%`,
@@ -303,11 +297,10 @@ export function WearPreview({
               className="preview-photo"
               onLoad={onPhotoReady}
             />
-            {bagBehind ? bagNode : null}
             {activeAnalysis?.mask ? (
               <canvas ref={cutoutRef} className="preview-cutout" aria-hidden="true" />
             ) : null}
-            {!bagBehind ? bagNode : null}
+            {bagNode}
             {status === 'loading' ? (
               <p className="preview-status">이 기기에서 자세를 읽는 중</p>
             ) : null}
@@ -327,7 +320,7 @@ export function WearPreview({
         {mode === 'photo' && !photoUrl ? (
           <button type="button" className="preview-empty" onClick={onUploadClick}>
             <strong>내 전신 사진을 올려 주세요</strong>
-            <span>이 기기에서 자세를 읽어, 가방을 어깨·손·허리에 올립니다.</span>
+            <span>올린 사진 위에 가방을 직접 옮겨 볼 수 있습니다.</span>
           </button>
         ) : null}
         <p className="preview-sticker">미리보기</p>
@@ -336,11 +329,7 @@ export function WearPreview({
         <p className="preview-hint">자세를 찾지 못했습니다. 가방을 직접 옮겨 주세요.</p>
       ) : null}
       {showBag && status !== 'fallback' ? (
-        <p className="preview-hint">
-          {status === 'ready'
-            ? '자세에 맞춰 올렸습니다. 위치를 살짝 옮겨도 됩니다.'
-            : '가방을 눌러 원하는 위치로 옮기세요'}
-        </p>
+        <p className="preview-hint">가방을 눌러 원하는 위치로 옮기세요</p>
       ) : null}
     </div>
   )

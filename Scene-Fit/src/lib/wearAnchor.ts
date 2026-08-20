@@ -47,6 +47,16 @@ export function wearAnchorFromPose(wear: WearStyle, landmarks: PoseLandmark[]): 
     }
   }
 
+  if (wear === 'long-strap') {
+    const hip = useLeft ? leftHip : rightHip
+    const outward = useLeft ? -0.045 : 0.045
+    return {
+      x: (hip.x + outward) * 100,
+      y: hip.y * 0.9 * 100,
+      behindPerson: false,
+    }
+  }
+
   if (wear === 'backpack') {
     return {
       x: ((leftShoulder.x + rightShoulder.x) / 2) * 100,
@@ -66,6 +76,7 @@ export function wearAnchorFromPose(wear: WearStyle, landmarks: PoseLandmark[]): 
 export function silhouetteBagAnchor(wear: WearStyle): WearAnchor {
   if (wear === 'backpack') return { x: 42, y: 28, behindPerson: true }
   if (wear === 'tote') return { x: 18, y: 48, behindPerson: false }
-  if (wear === 'shoulder') return { x: 28, y: 34, behindPerson: false }
+  if (wear === 'shoulder') return { x: 26, y: 38, behindPerson: false }
+  if (wear === 'long-strap') return { x: 22, y: 56, behindPerson: false }
   return { x: 58, y: 46, behindPerson: false }
 }

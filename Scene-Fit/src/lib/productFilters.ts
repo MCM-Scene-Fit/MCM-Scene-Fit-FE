@@ -1,7 +1,7 @@
 import { WEAR_LABEL } from '../data/labels'
-import type { Product, WearStyle } from '../types'
+import type { CatalogWearStyle, Product } from '../types'
 
-export const WEAR_FILTERS: Array<{ id: 'all' | WearStyle; label: string }> = [
+export const WEAR_FILTERS: Array<{ id: 'all' | CatalogWearStyle; label: string }> = [
   { id: 'all', label: '전체' },
   { id: 'tote', label: WEAR_LABEL.tote },
   { id: 'shoulder', label: WEAR_LABEL.shoulder },

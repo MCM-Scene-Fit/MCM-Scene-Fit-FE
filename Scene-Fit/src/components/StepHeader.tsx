@@ -5,7 +5,7 @@ import { BackButton } from './BackButton'
 import { BrandLogo } from './BrandLogo'
 
 type StepHeaderProps = {
-  step: number
+  step?: number
   title: string
   caption?: string
   backTo?: string
@@ -19,10 +19,10 @@ export function StepHeader({
   caption,
   backTo,
   onBack,
-  variant = 'flow',
+  variant = 'catalog',
 }: StepHeaderProps) {
   const navigate = useNavigate()
-  const catalog = variant === 'catalog'
+  const catalog = variant !== 'flow'
   const current = catalog ? undefined : FLOW_STEPS.find((item) => item.step === step)
 
   const goBack = () => {
@@ -50,7 +50,8 @@ export function StepHeader({
             <BrandLogo compact />
             <ol className="step-tags" aria-label="진행 단계">
               {FLOW_STEPS.map((item) => {
-                const state = item.step === step ? 'is-current' : item.step < step ? 'is-done' : ''
+                const state =
+                  item.step === step ? 'is-current' : step != null && item.step < step ? 'is-done' : ''
                 return (
                   <li key={item.step} className={state}>
                     <span className="step-tags__code">{item.code}</span>

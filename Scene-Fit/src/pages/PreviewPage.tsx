@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { StepHeader } from '../components/StepHeader'
 import { WearPreview } from '../components/WearPreview'
 import { useFlow } from '../context/FlowContext'
-import { BUILD_LABEL, BODY_SEX_LABEL, WEAR_LABEL } from '../data/labels'
+import { BUILD_LABEL, BODY_SEX_LABEL } from '../data/labels'
 import { getColor } from '../data/products'
 import { HEIGHT_MAX_CM, HEIGHT_MIN_CM } from '../lib/previewFit'
 import { BODY_SEXES, BUILDS } from '../types'
@@ -18,19 +18,16 @@ export function PreviewPage() {
     photoUrl,
     body,
     bag,
-    conditions,
     setPreviewMode,
     setPhotoUrl,
     setBody,
     setBag,
-    setConditions,
     setColor,
   } = useFlow()
 
   const product = selectedProduct
   if (!product || !selectedColorId) return null
   const color = getColor(product, selectedColorId)
-  const wearStyle = conditions.wearStyle ?? product.wearStyles[0]
 
   const onUpload = (file: File | undefined) => {
     if (!file) return
@@ -58,7 +55,6 @@ export function PreviewPage() {
           mode={previewMode}
           photoUrl={photoUrl}
           body={body}
-          wearStyle={wearStyle}
           bag={bag}
           onBagChange={setBag}
           onUploadClick={() => inputRef.current?.click()}
@@ -162,20 +158,6 @@ export function PreviewPage() {
               </div>
             </>
           )}
-
-          <p className="field-label">착용 위치</p>
-          <div className="chip-row">
-            {product.wearStyles.map((wear) => (
-              <button
-                key={wear}
-                type="button"
-                className={`chip ${wearStyle === wear ? 'is-on' : ''}`}
-                onClick={() => setConditions({ wearStyle: wear })}
-              >
-                {WEAR_LABEL[wear]}
-              </button>
-            ))}
-          </div>
 
           <p className="disclaimer">
             대략적인 비율 확인용이며 실제 착용감은 매장 확인이 필요합니다

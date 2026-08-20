@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { resetSession } from '../api'
 import { applyItemToggle, applyPresetChange, type PresetKind } from '../data/itemPresets'
 import { silhouetteBagAnchor } from '../lib/wearAnchor'
+import { resolveWearStyle } from '../lib/wearStyle'
 import type {
   BodyProfile,
   Conditions,
@@ -105,13 +106,14 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
     if (!product) return
     const nextColor = colorId ?? product.colors[0].id
     const prev = get()
+    const wearStyle = resolveWearStyle(product, prev.conditions.wearStyle)
     set({
       selectedProduct: product,
       selectedColorId: nextColor,
-      bag: wearDefaultBag(product.wearStyles[0]),
+      bag: wearDefaultBag(wearStyle),
       conditions: {
         ...prev.conditions,
-        wearStyle: prev.conditions.wearStyle ?? product.wearStyles[0],
+        wearStyle,
       },
     })
     void useCatalogStore.getState().ensureProduct(productId)

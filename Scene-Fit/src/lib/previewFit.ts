@@ -68,12 +68,37 @@ export function personHeightPx({
 
 /**
  * 공식 치수 : 내 키 = 화면 가방 : 사진(또는 실루엣) 속 키
- * screenBag = officialMm * photoPersonPx / myHeightMm
+ * 정면 컷은 손잡이·스트랩을 포함해 가방 몸통보다 세로로 긴 경우가 많다.
+ * 몸통 치수만으로 상자를 잡으면 contain이 사진을 더 줄여 가방이 실제보다 작아 보인다.
+ * 사진 비율로 상자를 잡고, 가로·세로 공식 치수 중 더 큰 쪽이 줄어들지 않게 맞춘다.
  */
-export function bagBoxPx(product: Product, photoPersonPx: number, myHeightCm: number) {
+export function bagBoxPx(
+  product: Product,
+  photoPersonPx: number,
+  myHeightCm: number,
+  imageWidth?: number,
+  imageHeight?: number,
+) {
   const myHeightMm = Math.max(myHeightCm, 1) * 10
+  const scale = photoPersonPx / myHeightMm
+  const bodyW = Math.max(1, product.widthMm) * scale
+  const bodyH = Math.max(1, product.heightMm) * scale
+  const minPx = 24
+
+  if (imageWidth && imageHeight && imageWidth > 0 && imageHeight > 0) {
+    const imgAspect = imageWidth / imageHeight
+    const byWidth = { width: bodyW, height: bodyW / imgAspect }
+    const byHeight = { width: bodyH * imgAspect, height: bodyH }
+    const box =
+      byWidth.width * byWidth.height >= byHeight.width * byHeight.height ? byWidth : byHeight
+    return {
+      width: Math.max(minPx, Math.round(box.width)),
+      height: Math.max(minPx, Math.round(box.height)),
+    }
+  }
+
   return {
-    width: Math.max(8, Math.round((product.widthMm * photoPersonPx) / myHeightMm)),
-    height: Math.max(8, Math.round((product.heightMm * photoPersonPx) / myHeightMm)),
+    width: Math.max(minPx, Math.round(bodyW)),
+    height: Math.max(minPx, Math.round(bodyH)),
   }
 }
