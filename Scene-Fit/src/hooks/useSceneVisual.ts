@@ -44,41 +44,46 @@ export function useSceneVisual(
   enablePortrait = false,
 ) {
   const [state, setState] = useState<{ key: string; visual: Omit<SceneVisual, 'loading'> } | null>(null)
-  const [loadingKey, setLoadingKey] = useState<string | null>(null)
+  // 실패한 키를 기억해 둔다. 없으면 요청이 깨졌을 때 "만드는 중"이 영원히 남는다.
+  const [failedKey, setFailedKey] = useState<string | null>(null)
   const wantsPortrait = !hasPhoto && enablePortrait
   const key = sceneKey(conditions, hasPhoto, body, enablePortrait)
+  const canBuild = !isMockMode() && Boolean(toApiConditions(conditions)?.destination)
 
   useEffect(() => {
     const payload = toApiConditions(conditions)
     if (isMockMode() || !payload || !payload.destination) return undefined
-    if (state?.key === key) return undefined
+    if (state?.key === key || failedKey === key) return undefined
 
     let cancelled = false
-    setLoadingKey(key)
     const conceptPromise = postSceneConcept(payload)
     const imagePromise = wantsPortrait
       ? postScenePortrait({ ...payload, heightCm: body.heightCm, build: body.build, sex: body.sex })
       : postSceneBackground(payload)
 
-    void Promise.all([conceptPromise, imagePromise]).then(([concept, image]) => {
-      if (cancelled) return
-      setState({
-        key,
-        visual: {
-          concept: concept?.concept ?? null,
-          description: concept?.description ?? null,
-          place: image?.place ?? null,
-          backgroundUrl: wantsPortrait ? null : (image?.url ?? null),
-          portraitUrl: wantsPortrait ? (image?.url ?? null) : null,
-        },
+    void Promise.all([conceptPromise, imagePromise])
+      .then(([concept, image]) => {
+        if (cancelled) return
+        setState({
+          key,
+          visual: {
+            concept: concept?.concept ?? null,
+            description: concept?.description ?? null,
+            place: image?.place ?? null,
+            backgroundUrl: wantsPortrait ? null : (image?.url ?? null),
+            portraitUrl: wantsPortrait ? (image?.url ?? null) : null,
+          },
+        })
       })
-      setLoadingKey((current) => (current === key ? null : current))
-    })
+      .catch(() => {
+        // 서버가 실패해도 실루엣만으로 결과 화면은 떠야 한다. 로딩 표시만 걷어 낸다.
+        if (!cancelled) setFailedKey(key)
+      })
     return () => {
       cancelled = true
     }
-  }, [key, conditions, hasPhoto, wantsPortrait, body, state])
+  }, [key, conditions, hasPhoto, wantsPortrait, body, state, failedKey])
 
   if (state?.key === key) return { ...state.visual, loading: false }
-  return { ...EMPTY, loading: loadingKey === key }
+  return { ...EMPTY, loading: canBuild && failedKey !== key }
 }

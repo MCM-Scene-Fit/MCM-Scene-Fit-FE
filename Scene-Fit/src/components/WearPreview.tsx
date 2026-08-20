@@ -17,6 +17,7 @@ import { SILHOUETTE_ANCHOR_VIEW, silhouetteBagAnchor, wearAnchorFromPose, type S
 import type { BodyProfile, PreviewMode, Product, WearStyle } from '../types'
 import { HumanSilhouette } from './HumanSilhouette'
 import { ProductImage } from './ProductImage'
+import { SceneProgress } from './SceneProgress'
 
 type BagTransform = {
   x: number
@@ -403,7 +404,7 @@ export function WearPreview({
               {!bagBehind ? bagNode : null}
             </div>
             {isAiPortrait ? <p className="preview-ai-badge">AI 생성 이미지</p> : null}
-            {sceneLoading ? <p className="preview-status">장면을 만드는 중 (15~20초)</p> : null}
+            {sceneLoading ? <SceneProgress /> : null}
             {status === 'loading' ? (
               <p className="preview-status">이 기기에서 자세를 읽는 중</p>
             ) : null}
@@ -412,16 +413,22 @@ export function WearPreview({
         {usingFlatSilhouette ? (
           <div ref={figureRef} className="preview-figure is-full">
             {showSilhouetteBackground ? (
-              <img src={backgroundUrl ?? ''} alt="" className="scene-background" aria-hidden="true" />
+              <>
+                <img src={backgroundUrl ?? ''} alt="" className="scene-background" aria-hidden="true" />
+                {/* 사람이 배경 위에 붙여넣은 것처럼 뜨지 않도록, 발밑을 어둡게 깔아 준다. */}
+                <div className="scene-ground-shade" aria-hidden="true" />
+              </>
             ) : null}
             <HumanSilhouette
               svgRef={silhouetteRef}
               heightCm={body.heightCm}
               build={body.build}
+              tone={showSilhouetteBackground ? 'solid' : 'dark'}
+              showGround={!showSilhouetteBackground}
             />
             {strapNode}
             {bagNode}
-            {sceneLoading ? <p className="preview-status">장면을 만드는 중 (15~20초)</p> : null}
+            {sceneLoading ? <SceneProgress /> : null}
           </div>
         ) : null}
         {mode === 'photo' && !photoUrl ? (

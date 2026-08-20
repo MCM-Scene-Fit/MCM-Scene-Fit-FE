@@ -39,8 +39,12 @@ type HumanSilhouetteProps = {
   heightCm: number
   build: BodyProfile['build']
   showGround?: boolean
-  /** dark: 착용 미리보기 배경(밝은 바탕)용. ghost: 카메라 가이드(영상 위)용, 흰 선. */
-  tone?: 'dark' | 'ghost'
+  /**
+   * dark: 착용 미리보기 배경(밝은 바탕)용, 가는 선.
+   * ghost: 카메라 가이드(영상 위)용, 흰 선.
+   * solid: 생성된 장소 사진 위에 세울 때. 가는 선은 배경에 묻혀서 꽉 채운다.
+   */
+  tone?: 'dark' | 'ghost' | 'solid'
 }
 
 export function HumanSilhouette({

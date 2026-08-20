@@ -13,6 +13,9 @@ type CameraCaptureProps = {
  * 찍은 사진은 파일 선택으로 올린 것과 똑같이 취급된다 — 이후 자세 인식·경고는
  * 그 파이프라인을 그대로 탄다.
  */
+const supported =
+  typeof navigator !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia)
+
 export function CameraCapture({ body, onCapture, onClose }: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -20,12 +23,8 @@ export function CameraCapture({ body, onCapture, onClose }: CameraCaptureProps) 
   const [facing, setFacing] = useState<'user' | 'environment'>('user')
 
   useEffect(() => {
+    if (!supported) return
     let cancelled = false
-    setError(null)
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setError('이 브라우저는 카메라를 지원하지 않습니다. 사진을 올려 주세요.')
-      return
-    }
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: facing }, audio: false })
       .then((stream) => {
@@ -35,6 +34,7 @@ export function CameraCapture({ body, onCapture, onClose }: CameraCaptureProps) 
         }
         streamRef.current = stream
         if (videoRef.current) videoRef.current.srcObject = stream
+        setError(null)
       })
       .catch(() => setError('카메라를 열 수 없습니다. 권한을 허용했는지 확인해 주세요.'))
     return () => {
@@ -43,6 +43,11 @@ export function CameraCapture({ body, onCapture, onClose }: CameraCaptureProps) 
       streamRef.current = null
     }
   }, [facing])
+
+  // 브라우저 지원 여부는 상태가 아니라 사실이다. 렌더할 때 바로 문구로 바꾼다.
+  const message = supported
+    ? error
+    : '이 브라우저는 카메라를 지원하지 않습니다. 사진을 올려 주세요.'
 
   const capture = () => {
     const video = videoRef.current
@@ -70,8 +75,8 @@ export function CameraCapture({ body, onCapture, onClose }: CameraCaptureProps) 
   return (
     <div className="camera-modal" role="dialog" aria-modal="true" aria-label="사진 촬영">
       <div className="camera-stage">
-        {error ? (
-          <p className="camera-error">{error}</p>
+        {message ? (
+          <p className="camera-error">{message}</p>
         ) : (
           <>
             <video
@@ -107,7 +112,7 @@ export function CameraCapture({ body, onCapture, onClose }: CameraCaptureProps) 
         >
           ⟳
         </button>
-        <button type="button" className="btn btn-primary" onClick={capture} disabled={Boolean(error)}>
+        <button type="button" className="btn btn-primary" onClick={capture} disabled={Boolean(message)}>
           촬영
         </button>
       </div>
