@@ -3,19 +3,26 @@ import { FitPassFields } from '../components/FitPassForm'
 import { ProductMini } from '../components/ProductCard'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
-import { getProduct } from '../data/products'
-import { runFitCheck } from '../lib/fitCheck'
+import { useServerFit } from '../hooks/useServerFit'
 import { useFitPassSubmit } from '../lib/fitPass'
+import { useCatalogStore } from '../store/useCatalogStore'
 
 export function FitPassPage() {
   const navigate = useNavigate()
   const { selectedProduct, selectedColorId, conditions } = useFlow()
+  const getCatalogProduct = useCatalogStore((state) => state.getProduct)
   const product = selectedProduct
-  const result = product ? runFitCheck(product, conditions) : null
-  const alternative = result?.alternativeId ? getProduct(result.alternativeId) : null
-  const { ready, onSubmit } = useFitPassSubmit(result?.storeChecks ?? [], () => {
-    navigate('/fit-pass/done')
-  })
+  const result = useServerFit(product, conditions)
+  const alternative = result?.alternativeId ? getCatalogProduct(result.alternativeId) : null
+  const { ready, error, onSubmit } = useFitPassSubmit(
+    result?.storeChecks ?? [],
+    () => {
+      navigate('/fit-pass/done')
+    },
+    product
+      ? { productId: product.id, colorId: selectedColorId ?? undefined, alternativeId: result?.alternativeId }
+      : undefined,
+  )
 
   if (!product) return null
 
@@ -28,7 +35,7 @@ export function FitPassPage() {
         backTo="/result"
       />
 
-      <form onSubmit={onSubmit}>
+      <form onSubmit={(event) => void onSubmit(event)}>
         <div className="fitpass-layout">
           <div>
             <ProductMini product={product} colorId={selectedColorId ?? undefined} />
@@ -61,6 +68,7 @@ export function FitPassPage() {
               실제 예약 확정이나 실시간 재고 차감은 하지 않습니다. 재고 및 체험 가능 여부 확인
               요청만 접수합니다.
             </p>
+            {error ? <p className="empty-note">{error}</p> : null}
           </aside>
         </div>
 

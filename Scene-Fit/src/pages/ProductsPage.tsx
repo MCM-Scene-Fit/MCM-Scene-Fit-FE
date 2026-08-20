@@ -4,24 +4,25 @@ import { ProductCard } from '../components/ProductCard'
 import { ProductFilters } from '../components/ProductFilters'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { formatPrice } from '../data/labels'
-import { PRODUCTS } from '../data/products'
 import {
   DEFAULT_PRODUCT_FILTERS,
   filterProducts,
   type ProductFilterState,
 } from '../lib/productFilters'
+import { useCatalogStore } from '../store/useCatalogStore'
 import { useFlowStore } from '../store/useFlowStore'
 
 export function ProductsPage() {
   const navigate = useNavigate()
+  const catalogProducts = useCatalogStore((state) => state.products)
   const selectedProduct = useFlowStore((state) => state.selectedProduct)
   const selectedColorId = useFlowStore((state) => state.selectedColorId)
   const selectProduct = useFlowStore((state) => state.selectProduct)
   const [filters, setFilters] = useState<ProductFilterState>(DEFAULT_PRODUCT_FILTERS)
 
   const products = useMemo(
-    () => filterProducts(PRODUCTS, filters),
-    [filters],
+    () => filterProducts(catalogProducts, filters),
+    [catalogProducts, filters],
   )
 
   const selectedInView = products.some((product) => product.id === selectedProduct?.id)
@@ -42,7 +43,7 @@ export function ProductsPage() {
 
       <ProductFilters
         filters={filters}
-        total={PRODUCTS.length}
+        total={catalogProducts.length}
         shown={products.length}
         onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
         onReset={() => setFilters(DEFAULT_PRODUCT_FILTERS)}

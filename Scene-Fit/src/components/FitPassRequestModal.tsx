@@ -13,6 +13,7 @@ type FitPassRequestModalProps = {
   storeChecks: string[]
   product?: Product
   colorId?: string
+  alternativeId?: string | null
   onClose: () => void
 }
 
@@ -21,19 +22,20 @@ export function FitPassRequestModal({
   storeChecks,
   product: productProp,
   colorId: colorIdProp,
+  alternativeId,
   onClose,
 }: FitPassRequestModalProps) {
   const navigate = useNavigate()
   const { selectedProduct, selectedColorId } = useFlow()
   const product = productProp ?? selectedProduct
   const colorId = colorIdProp ?? selectedColorId ?? product?.colors[0].id
-  const { ready, onSubmit } = useFitPassSubmit(
+  const { ready, error, onSubmit } = useFitPassSubmit(
     storeChecks,
     () => {
       onClose()
       navigate('/fit-pass/done')
     },
-    product ? { productId: product.id, colorId } : undefined,
+    product ? { productId: product.id, colorId, alternativeId } : undefined,
   )
 
   useEffect(() => {
@@ -79,12 +81,13 @@ export function FitPassRequestModal({
 
         <ProductMini product={product} colorId={color.id} />
 
-        <form className="modal-sheet__form" onSubmit={onSubmit}>
+        <form className="modal-sheet__form" onSubmit={(event) => void onSubmit(event)}>
           <FitPassFields />
           <p className="disclaimer">
             실제 예약 확정이나 실시간 재고 차감은 하지 않습니다. 재고 및 체험 가능 여부 확인
             요청만 접수합니다.
           </p>
+          {error ? <p className="empty-note">{error}</p> : null}
           <button type="submit" className="btn btn-primary" disabled={!ready}>
             매장 체험 요청하기
           </button>

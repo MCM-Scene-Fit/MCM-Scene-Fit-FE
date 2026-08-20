@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { EvidenceBadge } from '../components/EvidenceBadge'
 import { FitCard } from '../components/FitCard'
@@ -8,9 +8,9 @@ import { ProductMini } from '../components/ProductCard'
 import { StorageCanvas } from '../components/StorageCanvas'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
-import { getProduct } from '../data/products'
-import { runFitCheck } from '../lib/fitCheck'
+import { useServerFit } from '../hooks/useServerFit'
 import { formatOccupancy } from '../lib/itemFit'
+import { useCatalogStore } from '../store/useCatalogStore'
 import type { ItemVerdict } from '../types'
 
 function NoteCard({
@@ -68,15 +68,13 @@ export function ResultPage() {
   const [passOpen, setPassOpen] = useState(false)
   const { selectedProduct, selectedColorId, conditions, conditionsReady, startQuickDemo, setItemPreset } =
     useFlow()
+  const getCatalogProduct = useCatalogStore((state) => state.getProduct)
   const product = selectedProduct
 
-  const result = useMemo(() => {
-    if (!product) return null
-    return runFitCheck(product, conditions)
-  }, [product, conditions])
+  const result = useServerFit(product, conditions)
 
   if (!product || !result) return null
-  const alternative = result.alternativeId ? getProduct(result.alternativeId) : null
+  const alternative = result.alternativeId ? getCatalogProduct(result.alternativeId) : null
 
   return (
     <main className="page has-sticky">
@@ -90,6 +88,12 @@ export function ResultPage() {
       {!conditionsReady ? (
         <p className="empty-note">
           빠른 체험 미리보기입니다. 조건을 바꾸려면 이전 단계에서 다시 입력할 수 있습니다.
+        </p>
+      ) : null}
+
+      {!result.allConditionsMet ? (
+        <p className="empty-note">
+          현재 선택한 조건을 모두 만족하는 제품을 찾지 못했습니다.
         </p>
       ) : null}
 
@@ -170,6 +174,7 @@ export function ResultPage() {
       <FitPassRequestModal
         open={passOpen}
         storeChecks={result.storeChecks}
+        alternativeId={result.alternativeId}
         onClose={() => setPassOpen(false)}
       />
     </main>

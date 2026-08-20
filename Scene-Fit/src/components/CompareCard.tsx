@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { WEAR_LABEL, formatPrice } from '../data/labels'
 import { bagCardScale, bagImageRatio, getColor } from '../data/products'
 import { formatOccupancy } from '../lib/itemFit'
+import { useCatalogStore } from '../store/useCatalogStore'
 import type { AxisStatus, FitResult, ItemVerdict, Product } from '../types'
 import { AxisMeter, AxisPill } from './AxisMeter'
 import { EvidenceBadge } from './EvidenceBadge'
@@ -20,6 +21,7 @@ type CompareCardProps = {
 }
 
 function ComparePreview({ badge, product, colorId }: Omit<CompareSide, 'result'>) {
+  const catalog = useCatalogStore((state) => state.products)
   const color = getColor(product, colorId ?? product.colors[0].id)
 
   return (
@@ -29,7 +31,7 @@ function ComparePreview({ badge, product, colorId }: Omit<CompareSide, 'result'>
         className="compare-preview__visual"
         style={
           {
-            '--bag-scale': String(bagCardScale(product)),
+              '--bag-scale': String(bagCardScale(product, catalog)),
             '--bag-ratio': bagImageRatio(product, color.id),
           } as CSSProperties
         }
@@ -132,9 +134,11 @@ function PriceCell({ product }: { product: Product }) {
   return (
     <div className="compare-price">
       <strong>{formatPrice(product.price)}</strong>
-      <a className="text-link" href={product.officialUrl} target="_blank" rel="noreferrer">
-        공식 상세
-      </a>
+      {product.officialUrl ? (
+        <a className="text-link" href={product.officialUrl} target="_blank" rel="noreferrer">
+          공식 상세
+        </a>
+      ) : null}
     </div>
   )
 }

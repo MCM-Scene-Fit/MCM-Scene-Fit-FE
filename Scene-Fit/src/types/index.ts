@@ -54,9 +54,9 @@ export type ProductColor = {
   image: string
   imageWidth: number
   imageHeight: number
-  sideImage: string
-  sideImageWidth: number
-  sideImageHeight: number
+  sideImage?: string
+  sideImageWidth?: number
+  sideImageHeight?: number
 }
 
 export type Product = {
@@ -81,6 +81,12 @@ export type Product = {
   mood: string[]
   rewearTags: Scene[]
   weightG?: number
+  careNotes?: string
+}
+
+export type Store = {
+  id: string
+  name: string
 }
 
 export type Conditions = {
@@ -116,6 +122,7 @@ export const AXIS_STATUSES = ['match', 'check', 'weak'] as const
 export type AxisStatus = (typeof AXIS_STATUSES)[number]
 
 export type FitResult = {
+  productId: string
   sceneMatch: { headline: string; detail: string; positive: boolean; status: AxisStatus }
   carryCheck: {
     headline: string
@@ -130,6 +137,7 @@ export type FitResult = {
   mismatches: string[]
   storeChecks: string[]
   alternativeId: string | null
+  allConditionsMet: boolean
 }
 
 export type FitPassExperience =
@@ -146,10 +154,27 @@ export type FitPassDraft = {
   customNote: string
 }
 
+export type FitPassStatus = 'requested' | 'checking' | 'confirmed'
+
+export type FitPassSnapshot = {
+  matches: string[]
+  storeChecks: string[]
+  storeQuestions: string[]
+}
+
 export type FitPassIssued = {
   id: string
   storeChecks: string[]
   createdAt: string
+  status?: FitPassStatus
+  demo?: boolean
+  disclaimer?: string
+  productId?: string
+  colorId?: string | null
+  alternativeId?: string | null
+  store?: Store
+  visitTime?: string | null
+  experiences?: FitPassExperience[]
+  customNote?: string
+  snapshot?: FitPassSnapshot
 }
-
-export type FitPassStatus = 'requested' | 'checking' | 'confirmed'

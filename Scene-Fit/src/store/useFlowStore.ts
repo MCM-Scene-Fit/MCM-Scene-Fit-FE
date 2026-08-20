@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { getProduct, PRODUCTS } from '../data/products'
+import { resetSession } from '../api'
 import { applyItemToggle, applyPresetChange, type PresetKind } from '../data/itemPresets'
 import { silhouetteBagAnchor } from '../lib/wearAnchor'
 import type {
@@ -14,6 +14,7 @@ import type {
   Product,
   WearStyle,
 } from '../types'
+import { QUICK_DEMO_PRODUCT_ID, useCatalogStore } from './useCatalogStore'
 
 type BagTransform = {
   x: number
@@ -35,6 +36,7 @@ type FlowState = {
 
 type FlowActions = {
   selectProduct: (productId: string, colorId?: string) => void
+  replaceSelectedProduct: (product: Product) => void
   setColor: (colorId: string) => void
   setPreviewMode: (mode: PreviewMode) => void
   setPhotoUrl: (url: string | null) => void
@@ -45,7 +47,8 @@ type FlowActions = {
   setItemPreset: (kind: PresetKind, presetId: string) => void
   setFitPass: (patch: Partial<FitPassDraft>) => void
   toggleExperience: (experience: FitPassExperience) => void
-  submitFitPass: (storeChecks: string[]) => void
+  submitFitPass: (issued: FitPassIssued) => void
+  setFitPassIssued: (issued: FitPassIssued) => void
   setFitPassStatus: (status: FitPassStatus) => void
   startQuickDemo: () => void
   resetFlow: () => void
@@ -97,7 +100,7 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
   ...initialState,
 
   selectProduct: (productId, colorId) => {
-    const product = getProduct(productId)
+    const product = useCatalogStore.getState().getProduct(productId)
     if (!product) return
     const nextColor = colorId ?? product.colors[0].id
     const prev = get()
@@ -109,6 +112,17 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
         ...prev.conditions,
         wearStyle: prev.conditions.wearStyle ?? product.wearStyles[0],
       },
+    })
+    void useCatalogStore.getState().ensureProduct(productId)
+  },
+
+  replaceSelectedProduct: (product) => {
+    const current = get()
+    if (!current.selectedProduct || current.selectedProduct.id !== product.id) return
+    const colorStillValid = product.colors.some((color) => color.id === current.selectedColorId)
+    set({
+      selectedProduct: product,
+      selectedColorId: colorStillValid ? current.selectedColorId : product.colors[0].id,
     })
   },
 
@@ -165,20 +179,25 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
     })
   },
 
-  submitFitPass: (storeChecks) =>
+  submitFitPass: (issued) =>
     set({
-      fitPassStatus: 'requested',
-      fitPassIssued: {
-        id: `fp_${Date.now().toString(36)}`,
-        storeChecks,
-        createdAt: new Date().toISOString(),
-      },
+      fitPassStatus: issued.status ?? 'requested',
+      fitPassIssued: issued,
+    }),
+
+  setFitPassIssued: (issued) =>
+    set({
+      fitPassIssued: issued,
+      fitPassStatus: issued.status ?? get().fitPassStatus,
     }),
 
   setFitPassStatus: (status) => set({ fitPassStatus: status }),
 
   startQuickDemo: () => {
-    const product = PRODUCTS[0]
+    const catalog = useCatalogStore.getState()
+    const product =
+      catalog.getProduct(QUICK_DEMO_PRODUCT_ID) ?? catalog.products[0]
+    if (!product) return
     const current = get().photoUrl
     if (current) URL.revokeObjectURL(current)
     set({
@@ -201,12 +220,14 @@ export const useFlowStore = create<FlowStore>()((set, get) => ({
       fitPassIssued: null,
       fitPassStatus: null,
     })
+    void catalog.ensureProduct(product.id)
   },
 
   resetFlow: () => {
     const current = get().photoUrl
     if (current) URL.revokeObjectURL(current)
     set(initialState)
+    void resetSession()
   },
 }))
 

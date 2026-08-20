@@ -1,5 +1,6 @@
-import { useEffect, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { getFitPass, isMockMode } from '../api'
 import { ProductImage } from '../components/ProductImage'
 import { TicketBarcode, TicketQr } from '../components/TicketMark'
 import { useFlow } from '../context/FlowContext'
@@ -7,11 +8,11 @@ import {
   EXPERIENCE_LABEL,
   FIT_PASS_STATUS_LABEL,
   FIT_PASS_STATUSES,
-  STORES,
   formatPrice,
   formatVisitTime,
 } from '../data/labels'
 import { bagImageRatio, getColor } from '../data/products'
+import { useCatalogStore } from '../store/useCatalogStore'
 
 export function FitPassDonePage() {
   const navigate = useNavigate()
@@ -21,11 +22,37 @@ export function FitPassDonePage() {
     fitPass,
     fitPassIssued,
     fitPassStatus,
+    setFitPassIssued,
     setFitPassStatus,
     resetFlow,
   } = useFlow()
+  const stores = useCatalogStore((state) => state.stores)
+  const [liveStatus, setLiveStatus] = useState(false)
+  const issuedId = fitPassIssued?.id
 
   useEffect(() => {
+    if (!issuedId || isMockMode()) return undefined
+    let cancelled = false
+    const poll = async () => {
+      try {
+        const next = await getFitPass(issuedId)
+        if (cancelled) return
+        setLiveStatus(true)
+        setFitPassIssued(next)
+      } catch {
+        if (!cancelled) setLiveStatus(false)
+      }
+    }
+    void poll()
+    const interval = window.setInterval(() => void poll(), 2500)
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
+  }, [issuedId, setFitPassIssued])
+
+  useEffect(() => {
+    if (liveStatus) return undefined
     if (fitPassStatus === 'requested') {
       const timer = window.setTimeout(() => setFitPassStatus('checking'), 2500)
       return () => window.clearTimeout(timer)
@@ -35,7 +62,7 @@ export function FitPassDonePage() {
       return () => window.clearTimeout(timer)
     }
     return undefined
-  }, [fitPassStatus, setFitPassStatus])
+  }, [fitPassStatus, liveStatus, setFitPassStatus])
 
   if (!selectedProduct) return null
   if (!fitPassIssued || !fitPassStatus) {
@@ -43,8 +70,16 @@ export function FitPassDonePage() {
   }
 
   const color = getColor(selectedProduct, selectedColorId ?? selectedProduct.colors[0].id)
-  const store = STORES.find((item) => item.id === fitPass.storeId)
-  const storeChecks = fitPassIssued.storeChecks
+  const store =
+    fitPassIssued.store ?? stores.find((item) => item.id === fitPass.storeId)
+  const storeChecks = fitPassIssued.snapshot?.storeChecks.length
+    ? fitPassIssued.snapshot.storeChecks
+    : fitPassIssued.storeChecks
+  const experiences = fitPassIssued.experiences?.length
+    ? fitPassIssued.experiences
+    : fitPass.experiences
+  const visitTime = fitPassIssued.visitTime || fitPass.visitTime
+  const customNote = fitPassIssued.customNote || fitPass.customNote
 
   return (
     <main className="page pass-page">
@@ -120,8 +155,8 @@ export function FitPassDonePage() {
               <span>Gate</span>
             </dt>
             <dd>
-              {fitPass.experiences[0]
-                ? EXPERIENCE_LABEL[fitPass.experiences[0]]
+              {experiences[0]
+                ? EXPERIENCE_LABEL[experiences[0]]
                 : '매장 체험'}
             </dd>
           </div>
@@ -130,14 +165,14 @@ export function FitPassDonePage() {
               일시
               <span>Time</span>
             </dt>
-            <dd>{formatVisitTime(fitPass.visitTime)}</dd>
+            <dd>{formatVisitTime(visitTime ?? '')}</dd>
           </div>
         </dl>
 
         <section className="pass-block">
           <h3>체험 목적</h3>
           <ul className="pass-chips">
-            {fitPass.experiences.map((experience) => (
+            {experiences.map((experience) => (
               <li key={experience}>{EXPERIENCE_LABEL[experience]}</li>
             ))}
           </ul>
@@ -154,15 +189,16 @@ export function FitPassDonePage() {
           </ul>
         </section>
 
-        {fitPass.customNote ? (
+        {customNote ? (
           <section className="pass-block">
             <h3>직접 확인하고 싶은 항목</h3>
-            <p>{fitPass.customNote}</p>
+            <p>{customNote}</p>
           </section>
         ) : null}
 
         <p className="pass-disclaimer">
-          데모 상태입니다. 재고 있음이나 예약 확정을 뜻하지 않습니다.
+          {fitPassIssued.disclaimer ??
+            '데모 상태입니다. 재고 있음이나 예약 확정을 뜻하지 않습니다.'}
         </p>
 
         <footer className="pass-ticket__foot">

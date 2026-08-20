@@ -296,9 +296,13 @@ export function getColor(product: Product, colorId: string) {
 }
 
 /** 카드 안에서 다른 가방과 같은 기준으로 상대 크기를 맞춘다. */
-export function bagCardScale(product: Product) {
-  const largest = Math.max(...PRODUCTS.map((item) => Math.max(item.widthMm, item.heightMm)))
-  return Math.max(0.58, Math.max(product.widthMm, product.heightMm) / largest)
+export function bagCardScale(product: Product, catalog: Product[] = PRODUCTS) {
+  const list = catalog.length > 0 ? catalog : PRODUCTS
+  const largest = Math.max(
+    ...list.map((item) => Math.max(item.widthMm || 0, item.heightMm || 0)),
+    1,
+  )
+  return Math.max(0.58, Math.max(product.widthMm || 0, product.heightMm || 0) / largest)
 }
 
 export function bagImageRatio(product: Product, colorId?: string) {

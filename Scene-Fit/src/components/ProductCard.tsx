@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { formatPrice, WEAR_LABEL } from '../data/labels'
 import { bagCardScale, bagImageRatio, getColor } from '../data/products'
+import { useCatalogStore } from '../store/useCatalogStore'
 import type { Product } from '../types'
 import { ProductImage } from './ProductImage'
 
@@ -17,8 +18,13 @@ export function ProductCard({
   colorId,
   onSelect,
 }: ProductCardProps) {
+  const catalog = useCatalogStore((state) => state.products)
   const activeColorId = colorId ?? product.colors[0].id
   const color = getColor(product, activeColorId)
+  const dims =
+    product.widthMm && product.heightMm && product.depthMm
+      ? `${product.sizeLabel} · ${product.widthMm / 10} × ${product.heightMm / 10} × ${product.depthMm / 10} cm · ${product.sku}`
+      : `${product.sizeLabel}${product.sku ? ` · ${product.sku}` : ''}`
 
   return (
     <article className={`product-card ${selected ? 'is-selected' : ''}`}>
@@ -33,7 +39,7 @@ export function ProductCard({
           className="product-card__visual"
           style={
             {
-              '--bag-scale': String(bagCardScale(product)),
+              '--bag-scale': String(bagCardScale(product, catalog)),
               '--bag-ratio': bagImageRatio(product, activeColorId),
             } as CSSProperties
           }
@@ -46,8 +52,7 @@ export function ProductCard({
           <p className="eyebrow">{product.category}</p>
           <h3>{product.name}</h3>
           <p className="muted">
-            {product.sizeLabel} · {product.widthMm / 10} × {product.heightMm / 10} ×{' '}
-            {product.depthMm / 10} cm · {product.sku}
+            {dims}
           </p>
           <p className="product-card__wear">
             {product.wearStyles.map((wear) => WEAR_LABEL[wear]).join(' · ')}
@@ -68,14 +73,16 @@ export function ProductCard({
           />
         ))}
         <span className="muted">{color.name}</span>
-        <a
-          className="text-link product-card__official"
-          href={product.officialUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
-          공식 상세
-        </a>
+        {product.officialUrl ? (
+          <a
+            className="text-link product-card__official"
+            href={product.officialUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            공식 상세
+          </a>
+        ) : null}
       </div>
     </article>
   )
