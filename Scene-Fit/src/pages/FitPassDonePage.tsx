@@ -90,7 +90,8 @@ export function FitPassDonePage() {
       </p>
 
       <article className="pass-ticket pass-ticket--print" aria-label="Fit Pass 디지털 티켓">
-        <span className="pass-stamp">접수 완료</span>
+        {/* 상태는 매장 확인에 따라 넘어간다. 스탬프도 같이 따라가야 서로 어긋나지 않는다. */}
+        <span className="pass-stamp">{FIT_PASS_STATUS_LABEL[fitPassStatus]}</span>
         <span className="fit-card__punch" aria-hidden="true" />
 
         <header className="pass-ticket__head">

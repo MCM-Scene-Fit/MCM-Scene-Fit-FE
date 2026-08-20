@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { BackButton } from '../components/BackButton'
+import { BrandLogo } from '../components/BrandLogo'
+import { ConditionsExtras } from '../components/ConditionsExtras'
 import { ConditionsWizard } from '../components/ConditionsWizard'
 import { ProductCard } from '../components/ProductCard'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
 import { applyItemToggle, applyPresetChange, type PresetKind } from '../data/itemPresets'
+import { useSceneConcept } from '../hooks/useSceneConcept'
 import { CONDITION_STEPS, initialWizardStep } from '../lib/conditionsWizard'
 import { isMockMode, postRecommend, toApiConditions } from '../api'
 import { runFitCheck } from '../lib/fitCheck'
@@ -33,6 +37,7 @@ export function RecommendPage() {
   const [candidates, setCandidates] = useState<Product[]>([])
   const [emptyReason, setEmptyReason] = useState<string | null>(null)
   const current = CONDITION_STEPS[step - 1]
+  const sceneConcept = useSceneConcept(draft)
 
   const ready = Boolean(draft.scene && draft.mobility && draft.items.length && draft.wearStyle)
 
@@ -105,12 +110,14 @@ export function RecommendPage() {
   }
 
   return (
-    <main className={`page ${step >= 3 ? 'has-sticky' : ''}`}>
-      <StepHeader
-        title={current.title}
-        caption={current.caption}
-        onBack={() => (step === 1 ? navigate('/') : setStep(step - 1))}
-      />
+<main className={`page ${step >= 3 ? 'has-sticky' : ''}`}>
+  <StepHeader
+    variant="catalog"
+    step={3}
+    title={current.title}
+    caption={current.caption}
+    onBack={() => (step === 1 ? navigate('/preview') : setStep(step - 1))}
+  />
 
       <ConditionsWizard
         value={draft}
@@ -119,7 +126,25 @@ export function RecommendPage() {
         onChange={(patch) => setDraft((prev) => ({ ...prev, ...patch }))}
         onToggleItem={toggleItem}
         onSetPreset={setPreset}
-      />
+      >
+        <ConditionsExtras
+          conditions={draft}
+          onChange={(patch) => setDraft((prev) => ({ ...prev, ...patch }))}
+        />
+      </ConditionsWizard>
+
+      {step === 1 ? (
+        <StickyBar>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!draft.scene}
+            onClick={() => setStep(2)}
+          >
+            다음
+          </button>
+        </StickyBar>
+      ) : null}
 
       {step === 4 && submitted && !loading && candidates.length === 0 ? (
         <p className="empty-note">
@@ -130,6 +155,13 @@ export function RecommendPage() {
 
       {step === 4 && loading ? (
         <p className="empty-note">조건에 맞는 후보를 찾고 있습니다...</p>
+      ) : null}
+
+      {step === 4 && candidates.length > 0 && sceneConcept ? (
+        <p className="scene-concept-line">
+          <strong>{sceneConcept.concept}</strong>
+          <span> · {sceneConcept.description}</span>
+        </p>
       ) : null}
 
       {step === 4 && candidates.length > 0 ? (

@@ -109,10 +109,15 @@ export type BodyBuild = (typeof BUILDS)[number]
 export const BODY_SEXES = ['female', 'male'] as const
 export type BodySex = (typeof BODY_SEXES)[number]
 
+/** 어깨·허리·골반 비율(골격) — 전체 크기(build)와는 다른 축이다. 여성 실루엣에만 반영한다. */
+export const BODY_TYPES = ['straight', 'wave', 'natural'] as const
+export type BodyType = (typeof BODY_TYPES)[number]
+
 export type BodyProfile = {
   heightCm: number
   build: BodyBuild
   sex: BodySex
+  bodyType: BodyType
 }
 
 export type ItemVerdict = {

@@ -209,4 +209,42 @@ export async function getFitPass(fitPassId: string) {
   return issued
 }
 
+export type SceneConceptCopy = { concept: string; description: string }
+
+export async function postSceneConcept(conditions: ApiConditions) {
+  const data = await apiJson<Partial<SceneConceptCopy>>('/ai/scene-concept', 'POST', conditions)
+  if (!data.concept || !data.description) return null
+  return data as SceneConceptCopy
+}
+
+// 컨셉 문구도 이 응답에 같이 실려 온다 — 예전에는 /ai/scene-concept를 따로 불렀는데,
+// 배경/인물을 만드는 OpenAI 호출이 이미 컨셉도 만들 수 있어서 호출 하나를 줄였다.
+export type SceneBackground = { url: string; place: string; concept: string; description: string; cached: boolean }
+
+export async function postSceneBackground(conditions: ApiConditions) {
+  try {
+    const data = await apiJson<Partial<SceneBackground>>('/scene/background', 'POST', conditions)
+    if (!data.url || !data.place) return null
+    return data as SceneBackground
+  } catch {
+    return null
+  }
+}
+
+export type ScenePortraitInput = ApiConditions & {
+  heightCm: number
+  build: 'slim' | 'standard' | 'broad'
+  sex: 'female' | 'male'
+}
+
+export async function postScenePortrait(input: ScenePortraitInput) {
+  try {
+    const data = await apiJson<Partial<SceneBackground>>('/scene/portrait', 'POST', input)
+    if (!data.url || !data.place) return null
+    return data as SceneBackground
+  } catch {
+    return null
+  }
+}
+
 export { fromApiConditions, toApiConditions }
