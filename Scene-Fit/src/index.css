@@ -919,6 +919,7 @@ p {
 }
 
 .product-card__bag {
+  position: relative;
   display: grid;
   place-items: center;
   width: calc(var(--bag-scale, 1) * 86%);
@@ -1009,6 +1010,7 @@ p {
   background: transparent;
   border: 0;
   border-radius: 0;
+  overflow: visible;
 }
 
 .product-card--catalog.is-selected {
@@ -1019,10 +1021,16 @@ p {
 .product-card--catalog .product-card__visual {
   aspect-ratio: 3 / 4;
   border-radius: 16px;
-  padding: 18px 16px;
+  padding: 22px 18px 28px;
+  overflow: hidden;
   transition:
     box-shadow 180ms ease,
     transform 180ms ease;
+}
+
+.product-card--catalog .product-card__bag {
+  width: calc(var(--bag-scale, 1) * 92%);
+  height: calc(var(--bag-scale, 1) * 92%);
 }
 
 .product-card--catalog:hover .product-card__visual {
@@ -1448,26 +1456,11 @@ p {
   inset: 0;
   z-index: 4;
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.22;
   mix-blend-mode: soft-light;
-  background-image:
-    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.12) 40%, rgba(0, 0, 0, 0.45) 100%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-  background-size: cover, 120px 120px;
-}
-
-/* 실루엣 발밑 그림자. 배경 사진과 사람 사이를 이어 주는 접지면 역할만 한다. */
-.scene-ground-shade {
-  position: absolute;
-  left: 50%;
-  bottom: 9%;
-  width: 40%;
-  height: 6%;
-  transform: translateX(-50%);
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
-  z-index: 1;
-  pointer-events: none;
+  /* 아래를 어둡게 깔면 다리 옆에 그림자가 생긴다. 입자만 살짝 덮는다. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
 }
 
 .preview-photo.is-swapped {
@@ -1583,6 +1576,8 @@ p {
 }
 
 .silhouette {
+  position: relative;
+  z-index: 2;
   width: 100%;
   height: 100%;
   display: block;
@@ -1595,7 +1590,6 @@ p {
   stroke-linejoin: round;
   stroke-linecap: round;
   opacity: 0.92;
-  filter: drop-shadow(0 2px 3px rgba(43, 33, 28, 0.25));
 }
 
 .silhouette--ghost {
@@ -1615,15 +1609,15 @@ p {
   stroke-width: 1.2;
   stroke-linejoin: round;
   stroke-linecap: round;
-  /* 실루엣은 꽉 차야 한다 — 살짝 비치면 합성 실패처럼 보인다.
-     어두운 밤 배경에서 형태가 묻히지 않도록 아주 옅은 테두리 빛을 같이 준다. */
   opacity: 1;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5))
-    drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
 }
 
 .silhouette-ground {
-  fill: rgba(43, 33, 28, 0.18);
+  fill: rgba(43, 33, 28, 0.2);
+}
+
+.silhouette--solid .silhouette-ground {
+  fill: rgba(0, 0, 0, 0.28);
 }
 
 .preview-empty {

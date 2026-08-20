@@ -4,6 +4,7 @@ import {
   buildAlphaMap,
   gradeTowardScene,
   sceneToneFromPixels,
+  stripFloorHalo,
   type SceneTone,
 } from './personMask'
 
@@ -161,6 +162,8 @@ export function drawPersonCutout(
   mask: PersonMask,
   /** 배경 톤. 주면 인물 색감을 그 장면에 맞춘다. */
   tone?: SceneTone | null,
+  /** 발 위치(0~1). 이보다 아래는 바닥 그림자로 보고 지운다. */
+  footYNorm?: number | null,
 ) {
   const maxWidth = 720
   const scale = Math.min(1, maxWidth / Math.max(image.naturalWidth, 1))
@@ -186,6 +189,7 @@ export function drawPersonCutout(
       pixels.data[index] = Math.round(pixels.data[index] * alpha)
     }
   }
+  stripFloorHalo(pixels.data, width, height, footYNorm)
   if (tone) gradeTowardScene(pixels.data, tone)
   context.putImageData(pixels, 0, 0)
 }

@@ -14,7 +14,7 @@ import {
   type BodyAnalysis,
 } from '../lib/bodyAnalysis'
 import { bagBoxPx, containedSize, personHeightPx } from '../lib/previewFit'
-import { SILHOUETTE_ANCHOR_VIEW, silhouetteBagAnchor, wearAnchorFromPose, type StrapPoint } from '../lib/wearAnchor'
+import { SILHOUETTE_ANCHOR_VIEW, wearAnchorFromPose, type StrapPoint } from '../lib/wearAnchor'
 import { getColor } from '../data/products'
 import type { SceneTone } from '../lib/personMask'
 import type { BodyProfile, PreviewMode, Product, WearStyle } from '../types'
@@ -62,6 +62,24 @@ function sameBox(a: SizeBox, b: SizeBox) {
   return Math.abs(a.width - b.width) < 0.5 && Math.abs(a.height - b.height) < 0.5
 }
 
+function viewPointToPercent(point: StrapPoint, matrix: DOMMatrix, box: DOMRect): StrapPoint {
+  const mapped = new DOMPoint(point.x, point.y).matrixTransform(matrix)
+  return {
+    x: ((mapped.x - box.left) / box.width) * 100,
+    y: ((mapped.y - box.top) / box.height) * 100,
+  }
+}
+
+function footYNorm(landmarks: BodyAnalysis['landmarks']) {
+  const feet = [29, 30, 31, 32, 27, 28]
+    .map((index) => landmarks[index])
+    .filter((point): point is NonNullable<(typeof landmarks)[number]> =>
+      Boolean(point && point.visibility > 0.2),
+    )
+  if (!feet.length) return null
+  return Math.max(...feet.map((point) => point.y))
+}
+
 export function WearPreview({
   product,
   colorId,
@@ -90,7 +108,6 @@ export function WearPreview({
     originY: number
   } | null>(null)
   const [dragging, setDragging] = useState(false)
-  const [strapPoints, setStrapPoints] = useState<StrapPoint[]>([])
   const [photoBagBox, setPhotoBagBox] = useState<SizeBox>(EMPTY_BOX)
   const [silhouetteBagBox, setSilhouetteBagBox] = useState<SizeBox>(EMPTY_BOX)
   const [figure, setFigure] = useState<SizeBox & { url: string | null }>({
@@ -203,29 +220,41 @@ const color = getColor(product, colorId)
 
 useEffect(() => {
   if (usingFlatSilhouette) {
-    // 몸 좌표(viewBox)를 현재 그려진 화면 좌표로 옮긴다.
-    // 키·체형이 바뀌어 몸이 커져도 가방이 같은 부위에 남는다.
-    const view = SILHOUETTE_ANCHOR_VIEW[wearStyle]
-    const svg = silhouetteRef.current
-    const figure = figureRef.current
-    const group = svg?.querySelector('g')
-    const matrix = group?.getScreenCTM()
-    const box = figure?.getBoundingClientRect()
-
-    if (!matrix || !box || box.width <= 0 || box.height <= 0) {
-      const fallback = silhouetteBagAnchor(wearStyle)
-      onBagChange({ x: fallback.x, y: fallback.y })
-      setStrapPoints([])
-      return
+    const place = () => {
+      const view = SILHOUETTE_ANCHOR_VIEW[wearStyle]
+      const svg = silhouetteRef.current
+      const figure = figureRef.current
+      const group = svg?.querySelector('g')
+      const matrix = group?.getScreenCTM()
+      const box = figure?.getBoundingClientRect()
+      if (!matrix || !box || box.width <= 0 || box.height <= 0) return false
+      const toPct = (point: StrapPoint) => viewPointToPercent(point, matrix, box)
+      onBagChange(toPct(view))
+      return true
     }
 
-    const toPct = (p: StrapPoint) => {
-      const t = new DOMPoint(p.x, p.y).matrixTransform(matrix)
-      return { x: ((t.x - box.left) / box.width) * 100, y: ((t.y - box.top) / box.height) * 100 }
+    const observer = new ResizeObserver(() => {
+      place()
+    })
+    if (silhouetteRef.current) observer.observe(silhouetteRef.current)
+    if (figureRef.current) observer.observe(figureRef.current)
+
+    if (place()) {
+      return () => observer.disconnect()
     }
-    onBagChange(toPct(view))
-    setStrapPoints(view.strapPoints.map(toPct))
-    return
+
+    let attempts = 0
+    let frame = 0
+    const retry = () => {
+      attempts += 1
+      if (place() || attempts > 24) return
+      frame = requestAnimationFrame(retry)
+    }
+    frame = requestAnimationFrame(retry)
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
   }
   if (!activeAnalysis) return
   const anchor = wearAnchorFromPose(wearStyle, activeAnalysis.landmarks)
@@ -233,7 +262,6 @@ useEffect(() => {
     x: clamp(anchor.x, BAG_X_MIN, BAG_X_MAX),
     y: clamp(anchor.y, BAG_Y_MIN, BAG_Y_MAX),
   })
-  setStrapPoints(anchor.strapPoints)
 }, [usingFlatSilhouette, wearStyle, activeAnalysis, body.heightCm, body.build, body.sex, onBagChange])
 
 // 배경 톤을 미리 읽어 둔다. 인물을 이 톤에 맞춰야 붙여넣은 느낌이 사라진다.
@@ -257,7 +285,13 @@ const activeTone =
     if (!canvas || !photo || !activeAnalysis?.mask) return
     // 배경을 실제로 갈아 끼울 때만 색감을 맞춘다.
     const grading = Boolean(photoUrl) && Boolean(backgroundUrl) ? activeTone : null
-    drawPersonCutout(canvas, photo, activeAnalysis.mask, grading)
+    drawPersonCutout(
+      canvas,
+      photo,
+      activeAnalysis.mask,
+      grading,
+      footYNorm(activeAnalysis.landmarks),
+    )
   }, [activeAnalysis, isPhotoLike, effectivePhotoUrl, photoUrl, backgroundUrl, activeTone])
 
   const onPhotoReady = () => {
@@ -338,7 +372,7 @@ const activeTone =
   const bagNode =
     showBag && bagBox.width > 0 ? (
       <div
-        className={`bag-layer ${dragging ? 'is-dragging' : ''}`}
+        className={`bag-layer ${dragging ? 'is-dragging' : ''} ${bagBehind ? 'is-behind' : ''}`}
         style={{
           left: `${bag.x}%`,
           top: `${bag.y}%`,
@@ -363,33 +397,6 @@ const activeTone =
           <ProductImage product={product} colorId={colorId} decorative />
         </div>
       </div>
-    ) : null
-
-  // 백팩류 제품 사진은 끈이 이미 완성된 모양으로 찍혀 있다. 그 위에 우리 끈을 또
-  // 그리면 두 겹으로 겹쳐 이상해 보인다 — 크로스바디 사진(끈이 풀려 늘어진 사진)만 필요하다.
-  const productShowsOwnStraps = product.wearStyles.includes('backpack')
-  const strapNode =
-    !productShowsOwnStraps && strapPoints.length > 0 && showBag ? (
-      <svg className="strap-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        {strapPoints.map((point, index) => {
-          // 팽팽하게 당겨진 천 끈이라 실제로는 거의 안 휜다. 곡률을 거리에 비례한
-          // 아주 작은 값으로 제한한다 — 고정폭(4)이면 사진마다 어깨-가방 거리가
-          // 달라져 어떤 사진에서는 과하게 늘어진 것처럼 보였다.
-          const dx = bag.x - point.x
-          const dy = bag.y - point.y
-          const distance = Math.hypot(dx, dy)
-          const bow = Math.min(2.5, distance * 0.06)
-          const d = `M ${point.x} ${point.y} Q ${(point.x + bag.x) / 2} ${Math.min(point.y, bag.y) - bow} ${bag.x} ${bag.y}`
-          return (
-            // 실선 하나면 그려 넣은 선처럼 보인다. 폭이 있는 어깨끈 + 가운데 하이라이트로
-            // 가죽/원단 느낌의 두께감을 준다.
-            <g key={index}>
-              <path className="strap-base" d={d} />
-              <path className="strap-highlight" d={d} />
-            </g>
-          )
-        })}
-      </svg>
     ) : null
 
   // 배경을 새 장면으로 바꾸려면 사람만 오려낸 캔버스가 준비돼 있어야 한다.
@@ -422,42 +429,37 @@ const activeTone =
                 : { width: '100%', height: '100%' }
             }
           >
-{showSceneBackground ? (
-  <>
-    <img src={backgroundUrl ?? ''} alt="" className="scene-background" aria-hidden="true" />
-    {/* 발밑이 비면 사람이 배경 위에 떠 보인다. 접지면을 깔아 준다. */}
-    <div className="scene-ground-shade" aria-hidden="true" />
-  </>
-) : null}
-<div
-  className="person-group"
-  style={
-    showSceneBackground
-      ? { transform: `scale(${backgroundPersonScale})`, transformOrigin: 'bottom center' }
-      : undefined
-  }
->
-  <img
-    ref={photoRef}
-    src={effectivePhotoUrl ?? ''}
-    alt={isAiPortrait ? 'AI가 키·체형으로 만든 인물 이미지' : '업로드한 전신 사진'}
-    className={`preview-photo ${showSceneBackground ? 'is-swapped' : ''}`}
-    onLoad={onPhotoReady}
-  />
-  {bagBehind ? bagNode : null}
-  {activeAnalysis?.mask ? (
-    <canvas
-      ref={cutoutRef}
-      className={`preview-cutout ${showSceneBackground ? 'is-swapped' : ''}`}
-      aria-hidden="true"
-    />
-  ) : null}
-  {strapNode}
-  {!bagBehind ? bagNode : null}
-</div>
-{showSceneBackground ? <div className="scene-blend" aria-hidden="true" /> : null}
-{isAiPortrait ? <p className="preview-ai-badge">AI 생성 이미지</p> : null}
-{sceneLoading ? <SceneProgress /> : null}
+            {showSceneBackground ? (
+              <img src={backgroundUrl ?? ''} alt="" className="scene-background" aria-hidden="true" />
+            ) : null}
+            <div
+              className="person-group"
+              style={
+                showSceneBackground
+                  ? { transform: `scale(${backgroundPersonScale})`, transformOrigin: 'bottom center' }
+                  : undefined
+              }
+            >
+              <img
+                ref={photoRef}
+                src={effectivePhotoUrl ?? ''}
+                alt={isAiPortrait ? 'AI가 키·체형으로 만든 인물 이미지' : '업로드한 전신 사진'}
+                className={`preview-photo ${showSceneBackground ? 'is-swapped' : ''}`}
+                onLoad={onPhotoReady}
+              />
+              {bagBehind ? bagNode : null}
+              {activeAnalysis?.mask ? (
+                <canvas
+                  ref={cutoutRef}
+                  className={`preview-cutout ${showSceneBackground ? 'is-swapped' : ''}`}
+                  aria-hidden="true"
+                />
+              ) : null}
+              {!bagBehind ? bagNode : null}
+            </div>
+            {showSceneBackground ? <div className="scene-blend" aria-hidden="true" /> : null}
+            {isAiPortrait ? <p className="preview-ai-badge">AI 생성 이미지</p> : null}
+            {sceneLoading ? <SceneProgress /> : null}
             {status === 'loading' ? (
               <p className="preview-status">이 기기에서 자세를 읽는 중</p>
             ) : null}
@@ -466,21 +468,18 @@ const activeTone =
         {usingFlatSilhouette ? (
           <div ref={figureRef} className="preview-figure is-full">
             {showSilhouetteBackground ? (
-              <>
-                <img src={backgroundUrl ?? ''} alt="" className="scene-background" aria-hidden="true" />
-                {/* 사람이 배경 위에 붙여넣은 것처럼 뜨지 않도록, 발밑을 어둡게 깔아 준다. */}
-                <div className="scene-ground-shade" aria-hidden="true" />
-              </>
+              <img src={backgroundUrl ?? ''} alt="" className="scene-background" aria-hidden="true" />
             ) : null}
+            {bagBehind ? bagNode : null}
             <HumanSilhouette
               svgRef={silhouetteRef}
               heightCm={body.heightCm}
               build={body.build}
               tone={showSilhouetteBackground ? 'solid' : 'dark'}
-              showGround={!showSilhouetteBackground}
+              align="bottom"
+              showGround
             />
-            {strapNode}
-            {bagNode}
+            {!bagBehind ? bagNode : null}
             {sceneLoading ? <SceneProgress /> : null}
           </div>
         ) : null}

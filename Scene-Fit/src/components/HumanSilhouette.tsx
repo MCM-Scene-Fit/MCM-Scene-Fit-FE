@@ -34,6 +34,10 @@ const OUTLINE_PATH = `
   Z
 `
 
+/** OUTLINE_PATH 발바닥 y. 키를 이 점 기준으로 줄여야 발이 땅에서 떨어지지 않는다. */
+export const SILHOUETTE_FOOT_Y = 246
+const SILHOUETTE_GROUND_Y = 248
+
 type HumanSilhouetteProps = {
   svgRef?: Ref<SVGSVGElement>
   heightCm: number
@@ -45,6 +49,8 @@ type HumanSilhouetteProps = {
    * solid: 생성된 장소 사진 위에 세울 때. 가는 선은 배경에 묻혀서 꽉 채운다.
    */
   tone?: 'dark' | 'ghost' | 'solid'
+  /** bottom: 미리보기 바닥에 세운다. center: 카메라 가이드처럼 화면 가운데. */
+  align?: 'center' | 'bottom'
 }
 
 export function HumanSilhouette({
@@ -53,6 +59,7 @@ export function HumanSilhouette({
   build,
   showGround = true,
   tone = 'dark',
+  align = 'center',
 }: HumanSilhouetteProps) {
   const widthScale = build === 'slim' ? 0.86 : build === 'broad' ? 1.14 : 1
   const heightScale = heightCm / HEIGHT_MAX_CM
@@ -61,12 +68,16 @@ export function HumanSilhouette({
     <svg
       ref={svgRef}
       viewBox="0 0 160 280"
-      preserveAspectRatio="xMidYMid meet"
+      preserveAspectRatio={align === 'bottom' ? 'xMidYMax meet' : 'xMidYMid meet'}
       className={`silhouette silhouette--${tone}`}
       aria-hidden="true"
     >
-      {showGround ? <ellipse cx="80" cy="268" rx="36" ry="6" className="silhouette-ground" /> : null}
-      <g transform={`translate(80 262) scale(${widthScale} ${heightScale}) translate(-80 -262)`}>
+      {showGround ? (
+        <ellipse cx="80" cy={SILHOUETTE_GROUND_Y} rx="34" ry="5" className="silhouette-ground" />
+      ) : null}
+      <g
+        transform={`translate(80 ${SILHOUETTE_FOOT_Y}) scale(${widthScale} ${heightScale}) translate(-80 -${SILHOUETTE_FOOT_Y})`}
+      >
         <path d={OUTLINE_PATH} />
       </g>
     </svg>

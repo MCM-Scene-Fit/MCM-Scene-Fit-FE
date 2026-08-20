@@ -3,7 +3,7 @@
  * 합성 품질이 여기 로직에 걸려 있어서, 깨지면 바로 알아채야 한다.
  */
 import assert from 'node:assert'
-import { buildAlphaMap, dilate, erode, largestBlob } from './personMask'
+import { buildAlphaMap, dilate, erode, largestBlob, stripFloorHalo, trimShadowSkirt } from './personMask'
 
 const W = 12
 const H = 8
@@ -107,5 +107,32 @@ assert.ok(
   softAlpha[at(111, 55)] > 0 && softAlpha[at(111, 55)] < 1,
   '경계는 0도 1도 아닌 중간값이어야 자연스럽다',
 )
+
+// 마스크 맨 아래 발밑은 한 겹 더 깎인다. 종아리 위쪽은 그대로다.
+const skirtCore = new Uint8Array(W * H)
+for (let y = 1; y <= 6; y += 1) for (let x = 3; x <= 8; x += 1) skirtCore[index(x, y)] = 1
+const skirt = trimShadowSkirt(skirtCore, W, H)
+assert.equal(skirt[index(5, 3)], 1, '몸통·종아리는 그대로여야 한다')
+assert.equal(skirt[index(3, 6)], 0, '발밑 모서리는 더 깎여야 한다')
+
+// 반투명 어두운 테두리는 바닥 그림자, 불투명한 어두운 신발은 사람
+const HW = 8
+const HH = 10
+const halo = new Uint8ClampedArray(HW * HH * 4)
+const put = (x: number, y: number, r: number, g: number, b: number, a: number) => {
+  const i = (y * HW + x) * 4
+  halo[i] = r
+  halo[i + 1] = g
+  halo[i + 2] = b
+  halo[i + 3] = a
+}
+const alphaAt = (x: number, y: number) => halo[(y * HW + x) * 4 + 3]
+put(3, 4, 30, 30, 30, 255) // 어두운 신발
+put(4, 4, 20, 20, 20, 120) // 반투명 그림자 테두리
+put(3, 9, 40, 40, 40, 200) // 발보다 아래
+stripFloorHalo(halo, HW, HH, 0.5)
+assert.equal(alphaAt(3, 4), 255, '불투명한 어두운 신발은 남아야 한다')
+assert.equal(alphaAt(4, 4), 0, '반투명 어두운 테두리는 지워져야 한다')
+assert.equal(alphaAt(3, 9), 0, '발보다 아래는 바닥 그림자로 지운다')
 
 console.log('personMask 검사 통과')

@@ -7,6 +7,7 @@ import { useFlow } from '../context/FlowContext'
 import { BUILD_LABEL, WEAR_LABEL } from '../data/labels'
 import { getColor } from '../data/products'
 import { HEIGHT_MAX_CM, HEIGHT_MIN_CM } from '../lib/previewFit'
+import { previewWearStyles } from '../lib/wearStyle'
 import { BUILDS } from '../types'
 
 export function PreviewPage() {
@@ -33,7 +34,8 @@ export function PreviewPage() {
   const product = selectedProduct
   if (!product || !selectedColorId) return null
   const color = getColor(product, selectedColorId)
-  const wearStyle = conditions.wearStyle ?? product.wearStyles[0]
+  const wearOptions = previewWearStyles(product)
+  const wearStyle = conditions.wearStyle ?? wearOptions[0]
 
   const onUpload = (file: File | undefined) => {
     if (!file) return
@@ -161,7 +163,7 @@ export function PreviewPage() {
 
           <p className="field-label">착용 위치</p>
           <div className="chip-row">
-            {product.wearStyles.map((wear) => (
+            {wearOptions.map((wear) => (
               <button
                 key={wear}
                 type="button"

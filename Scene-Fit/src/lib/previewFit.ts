@@ -6,7 +6,7 @@ export const HEIGHT_MAX_CM = 190
 export const SILHOUETTE_VIEW = {
   width: 160,
   height: 280,
-  figure: 239,
+  figure: 236,
 } as const
 
 /** 사진 높이 대비 사람(머리~발) 세로 비율. 마스크·관절 분석 결과. */

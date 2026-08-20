@@ -217,11 +217,12 @@ export function buildAlphaMap(coverage: Float32Array, width: number, height: num
   // 경계 폭. 이 폭 밖은 무조건 1, 안은 무조건 0, 그 사이 얇은 테두리만 신뢰도로 넘긴다.
   const edge = 2
   const interior = erode(core, width, height, edge)
-  const gate = dilate(core, width, height, edge)
+  const gated = trimShadowSkirt(core, width, height)
+  const gate = dilate(gated, width, height, edge)
 
   const alpha = new Float32Array(width * height)
   for (let i = 0; i < alpha.length; i += 1) {
-    if (interior[i]) {
+    if (interior[i] && gated[i]) {
       alpha[i] = 1
     } else if (gate[i]) {
       // 0.5가 아니라 조금 안쪽에서 넘긴다 — 경계 픽셀에는 배경색이 섞여 있어 후광이 된다.
@@ -229,4 +230,74 @@ export function buildAlphaMap(coverage: Float32Array, width: number, height: num
     }
   }
   return alpha
+}
+
+/** 사람 마스크 맨 아래는 바닥 그림자가 붙어 오기 쉽다. 발 근처만 한 겹 더 깎는다. */
+export function trimShadowSkirt(
+  core: Uint8Array,
+  width: number,
+  height: number,
+): Uint8Array {
+  let top = -1
+  let bottom = -1
+  for (let y = 0; y < height; y += 1) {
+    const row = y * width
+    let hit = 0
+    for (let x = 0; x < width; x += 1) {
+      if (core[row + x]) {
+        hit = 1
+        break
+      }
+    }
+    if (!hit) continue
+    if (top < 0) top = y
+    bottom = y
+  }
+  if (top < 0 || bottom <= top) return core
+
+  const span = bottom - top + 1
+  const from = bottom - Math.max(2, Math.round(span * 0.07))
+  const tighter = erode(core, width, height, 2)
+  const out = new Uint8Array(core)
+  for (let y = from; y <= bottom; y += 1) {
+    const row = y * width
+    out.set(tighter.subarray(row, row + width), row)
+  }
+  return out
+}
+
+/**
+ * 오려낸 인물에서 발밑·가장자리의 어두운 띠를 지운다.
+ * 원본 사진의 바닥 그림자가 마스크에 남으면, 새 배경 위에 다리 그림자로 보인다.
+ * 어두운 바지·신발(완전 불투명)은 건드리지 않는다.
+ */
+export function stripFloorHalo(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  footYNorm?: number | null,
+) {
+  const footRow =
+    footYNorm != null && footYNorm > 0.15 && footYNorm < 0.99
+      ? Math.min(height - 1, Math.round(footYNorm * height))
+      : null
+  const belowFeet = footRow != null ? footRow + Math.max(2, Math.round(height * 0.01)) : null
+
+  for (let y = 0; y < height; y += 1) {
+    const row = y * width * 4
+    for (let x = 0; x < width; x += 1) {
+      const i = row + x * 4
+      const alpha = pixels[i + 3]
+      if (alpha < 8) continue
+      if (belowFeet != null && y > belowFeet) {
+        pixels[i + 3] = 0
+        continue
+      }
+      // 반투명 테두리의 어두운 픽셀은 바닥 그림자·후광이다.
+      if (alpha < 248) {
+        const luma = 0.2126 * pixels[i] + 0.7152 * pixels[i + 1] + 0.0722 * pixels[i + 2]
+        if (luma < 92) pixels[i + 3] = 0
+      }
+    }
+  }
 }

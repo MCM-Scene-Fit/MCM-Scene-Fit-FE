@@ -55,6 +55,10 @@ export type ProductColor = {
   image: string
   imageWidth: number
   imageHeight: number
+  /** 착용 미리보기용. 손잡이·끈을 잘라 몸통 치수 비율에 맞춘 컷. */
+  bodyImage?: string
+  bodyImageWidth?: number
+  bodyImageHeight?: number
   sideImage?: string
   sideImageWidth?: number
   sideImageHeight?: number
