@@ -10,10 +10,12 @@ import {
   analyzeBody,
   assessPoseQuality,
   drawPersonCutout,
+  readSceneTone,
   type BodyAnalysis,
 } from '../lib/bodyAnalysis'
 import { bagBoxPx, containedSize, personHeightPx } from '../lib/previewFit'
 import { SILHOUETTE_ANCHOR_VIEW, silhouetteBagAnchor, wearAnchorFromPose, type StrapPoint } from '../lib/wearAnchor'
+import type { SceneTone } from '../lib/personMask'
 import type { BodyProfile, PreviewMode, Product, WearStyle } from '../types'
 import { HumanSilhouette } from './HumanSilhouette'
 import { ProductImage } from './ProductImage'
@@ -98,6 +100,7 @@ export function WearPreview({
   const [analysis, setAnalysis] = useState<{ url: string; body: BodyAnalysis } | null>(null)
   const [loadingUrl, setLoadingUrl] = useState<string | null>(null)
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
+  const [sceneTone, setSceneTone] = useState<{ url: string; tone: SceneTone | null } | null>(null)
 
   // 실제 업로드 사진이 없으면, 준비된 AI 인물 이미지를 "사진"처럼 취급한다.
   // 실루엣 전용 좌표 계산이 따로 필요 없다 — 실제 사진과 같은 자세 인식 파이프라인을 그대로 탄다.
@@ -219,12 +222,30 @@ export function WearPreview({
     setStrapPoints(anchor.strapPoints)
   }, [usingFlatSilhouette, wearStyle, activeAnalysis, body.heightCm, body.build, body.sex, onBagChange])
 
+  // 배경 톤을 미리 읽어 둔다. 인물을 이 톤에 맞춰야 붙여넣은 느낌이 사라진다.
+  useEffect(() => {
+    if (!backgroundUrl) return
+    let cancelled = false
+    void readSceneTone(backgroundUrl).then((tone) => {
+      if (!cancelled) setSceneTone({ url: backgroundUrl, tone })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [backgroundUrl])
+
+  // 배경이 바뀌는 순간에는 이전 톤을 쓰지 않는다.
+  const activeTone =
+    sceneTone && backgroundUrl && sceneTone.url === backgroundUrl ? sceneTone.tone : null
+
   useEffect(() => {
     const canvas = cutoutRef.current
     const photo = photoRef.current
     if (!canvas || !photo || !activeAnalysis?.mask) return
-    drawPersonCutout(canvas, photo, activeAnalysis.mask)
-  }, [activeAnalysis, isPhotoLike, effectivePhotoUrl])
+    // 배경을 실제로 갈아 끼울 때만 색감을 맞춘다.
+    const grading = Boolean(photoUrl) && Boolean(backgroundUrl) ? activeTone : null
+    drawPersonCutout(canvas, photo, activeAnalysis.mask, grading)
+  }, [activeAnalysis, isPhotoLike, effectivePhotoUrl, photoUrl, backgroundUrl, activeTone])
 
   const onPhotoReady = () => {
     const photo = photoRef.current
@@ -375,7 +396,11 @@ export function WearPreview({
             }
           >
             {showSceneBackground ? (
-              <img src={backgroundUrl ?? ''} alt="" className="scene-background" aria-hidden="true" />
+              <>
+                <img src={backgroundUrl ?? ''} alt="" className="scene-background" aria-hidden="true" />
+                {/* 발밑이 비면 사람이 배경 위에 떠 보인다. 접지면을 깔아 준다. */}
+                <div className="scene-ground-shade" aria-hidden="true" />
+              </>
             ) : null}
             <div
               className="person-group"
@@ -403,6 +428,7 @@ export function WearPreview({
               {strapNode}
               {!bagBehind ? bagNode : null}
             </div>
+            {showSceneBackground ? <div className="scene-blend" aria-hidden="true" /> : null}
             {isAiPortrait ? <p className="preview-ai-badge">AI 생성 이미지</p> : null}
             {sceneLoading ? <SceneProgress /> : null}
             {status === 'loading' ? (
