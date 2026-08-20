@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BackButton } from '../components/BackButton'
-import { BrandLogo } from '../components/BrandLogo'
 import { ConditionsExtras } from '../components/ConditionsExtras'
 import { ConditionsWizard } from '../components/ConditionsWizard'
 import { ProductCard } from '../components/ProductCard'

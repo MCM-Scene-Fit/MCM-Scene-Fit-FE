@@ -118,6 +118,9 @@ export const useFlowStore = create<FlowStore>()(
           conditions: {
             ...prev.conditions,
             wearStyle,
+          },
+        })
+        void useCatalogStore.getState().ensureProduct(productId)
       },
 
       replaceSelectedProduct: (product) => {

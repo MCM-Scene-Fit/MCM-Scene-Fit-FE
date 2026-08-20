@@ -13,7 +13,7 @@ import {
   readSceneTone,
   type BodyAnalysis,
 } from '../lib/bodyAnalysis'
-import { bagBoxPx, containedSize, HEIGHT_MAX_CM, personHeightPx } from '../lib/previewFit'
+import { bagBoxPx, containedSize, personHeightPx } from '../lib/previewFit'
 import { SILHOUETTE_ANCHOR_VIEW, silhouetteBagAnchor, wearAnchorFromPose, type StrapPoint } from '../lib/wearAnchor'
 import { getColor } from '../data/products'
 import type { SceneTone } from '../lib/personMask'
@@ -33,6 +33,7 @@ type WearPreviewProps = {
   mode: PreviewMode
   photoUrl: string | null
   body: BodyProfile
+  wearStyle: WearStyle
   bag: BagTransform
   onBagChange: (bag: Partial<BagTransform>) => void
   onUploadClick: () => void
@@ -67,6 +68,7 @@ export function WearPreview({
   mode,
   photoUrl,
   body,
+  wearStyle,
   bag,
   onBagChange,
   onUploadClick,
@@ -485,15 +487,16 @@ const activeTone =
         {mode === 'photo' && !photoUrl ? (
           <div className="preview-empty">
             <strong>내 전신 사진을 올려 주세요</strong>
-  <span>이 기기에서 자세를 읽어, 가방을 어깨·손·허리에 올립니다.</span>
-  <div className="preview-empty__actions">
-    <button type="button" className="btn btn-primary" onClick={onUploadClick}>
-      사진 올리기
-    </button>
-    <button type="button" className="btn btn-ghost" onClick={onCameraClick}>
-      카메라로 찍기
-    </button>
-  </div>  
+            <span>이 기기에서 자세를 읽어, 가방을 어깨·손·허리에 올립니다.</span>
+            <div className="preview-empty__actions">
+              <button type="button" className="btn btn-primary" onClick={onUploadClick}>
+                사진 올리기
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={onCameraClick}>
+                카메라로 찍기
+              </button>
+            </div>
+          </div>
         ) : null}
         <p className="preview-sticker">미리보기</p>
       </div>

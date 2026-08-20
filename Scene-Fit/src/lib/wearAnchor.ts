@@ -55,11 +55,13 @@ export function wearAnchorFromPose(wear: WearStyle, landmarks: PoseLandmark[]): 
 
   if (wear === 'long-strap') {
     const hip = useLeft ? leftHip : rightHip
+    const shoulder = useLeft ? leftShoulder : rightShoulder
     const outward = useLeft ? -0.045 : 0.045
     return {
       x: (hip.x + outward) * 100,
       y: hip.y * 0.9 * 100,
       behindPerson: false,
+      strapPoints: [{ x: shoulder.x * 100, y: shoulder.y * 100 }],
     }
   }
 
@@ -111,5 +113,4 @@ export const SILHOUETTE_ANCHOR_VIEW: Record<WearStyle, WearAnchor> = {
     strapPoints: [SIL_LEFT_SHOULDER, SIL_RIGHT_SHOULDER],
   },
   'long-strap': { x: 48, y: 156, behindPerson: false, strapPoints: [SIL_LEFT_SHOULDER] },
-}
 }
