@@ -1,6 +1,12 @@
 const SESSION_KEY = 'scene-fit-session-id'
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '/v1').replace(/\/$/, '')
+function resolveApiBaseUrl(raw: string | undefined) {
+  const value = (raw ?? '/v1').replace(/\/$/, '')
+  if (value === '/v1' || value.endsWith('/v1')) return value
+  return `${value}/v1`
+}
+
+export const API_BASE_URL = resolveApiBaseUrl(import.meta.env.VITE_API_BASE_URL)
 
 export function isMockMode() {
   return import.meta.env.VITE_API_MOCK === 'true'

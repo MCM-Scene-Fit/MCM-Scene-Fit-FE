@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import {
+  API_BASE_URL,
   ApiError,
   clearSessionId,
   createSession,
@@ -15,7 +16,6 @@ import { selectConditionsReady, useFlowStore } from '../store/useFlowStore'
 import { useCatalogStore } from '../store/useCatalogStore'
 
 let syncTimer: number | undefined
-let started = false
 let hydrating = false
 
 function isPristine() {
@@ -97,14 +97,12 @@ export function useAppBootstrap() {
   const refresh = useCatalogStore((state) => state.refresh)
 
   useEffect(() => {
-    if (!started) {
-      started = true
-      void (async () => {
-        await ensureSession()
-        await refresh()
-        await hydrateFromSession()
-      })()
-    }
+    console.info('[Scene Fit] API base:', isMockMode() ? 'mock' : API_BASE_URL)
+    void (async () => {
+      await ensureSession()
+      await refresh()
+      await hydrateFromSession()
+    })()
 
     const unsubCatalog = useCatalogStore.subscribe((state, prev) => {
       if (state.products === prev.products) return

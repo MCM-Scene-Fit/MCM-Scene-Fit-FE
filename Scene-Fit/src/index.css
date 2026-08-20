@@ -88,6 +88,66 @@ p {
     var(--paper);
 }
 
+.api-status {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  overflow: hidden;
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: var(--muted);
+  background: rgba(248, 244, 236, 0.92);
+  border-bottom: 1px solid var(--line);
+  animation: api-status-in 320ms ease-out;
+}
+
+.api-status.is-leaving {
+  animation: api-status-out 480ms ease-in forwards;
+  pointer-events: none;
+}
+
+.api-status--api {
+  color: var(--cognac);
+}
+
+.api-status--local {
+  color: var(--ink);
+}
+
+.api-status--pending {
+  color: var(--stone);
+}
+
+@keyframes api-status-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes api-status-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 40px;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom-color: transparent;
+  }
+}
+
 .page {
   width: min(var(--page-max), 100%);
   margin: 0 auto;
