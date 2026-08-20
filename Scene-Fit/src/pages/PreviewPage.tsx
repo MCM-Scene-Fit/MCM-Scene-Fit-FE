@@ -4,10 +4,10 @@ import { CameraCapture } from '../components/CameraCapture'
 import { StepHeader } from '../components/StepHeader'
 import { WearPreview } from '../components/WearPreview'
 import { useFlow } from '../context/FlowContext'
-import { BUILD_LABEL, BODY_SEX_LABEL, WEAR_LABEL } from '../data/labels'
+import { BUILD_LABEL, WEAR_LABEL } from '../data/labels'
 import { getColor } from '../data/products'
 import { HEIGHT_MAX_CM, HEIGHT_MIN_CM } from '../lib/previewFit'
-import { BODY_SEXES, BUILDS } from '../types'
+import { BUILDS } from '../types'
 
 export function PreviewPage() {
   const navigate = useNavigate()
@@ -141,20 +141,6 @@ export function PreviewPage() {
                   onChange={(event) => setBody({ heightCm: Number(event.target.value) })}
                 />
               </label>
-
-              <p className="field-label">아바타</p>
-              <div className="chip-row">
-                {BODY_SEXES.map((sex) => (
-                  <button
-                    key={sex}
-                    type="button"
-                    className={`chip ${body.sex === sex ? 'is-on' : ''}`}
-                    onClick={() => setBody({ sex })}
-                  >
-                    {BODY_SEX_LABEL[sex]}
-                  </button>
-                ))}
-              </div>
 
               <p className="field-label">체형</p>
               <div className="chip-row">
