@@ -85,6 +85,17 @@ assert.ok(
   '알파는 0~1 범위여야 한다',
 )
 
+// 다리처럼 원래 신뢰도가 낮게 나오는 부위: 몸통은 확신 높게(0.95), 다리는 낮게(0.55)
+// — 예전 방식(원본 신뢰도를 그대로 씀)이면 다리 전체가 흐려져 그림자처럼 보였다.
+const lowConfidence = new Float32Array(BW * BH)
+const paintValue = (x0: number, x1: number, y0: number, y1: number, value: number) => {
+  for (let y = y0; y <= y1; y += 1) for (let x = x0; x <= x1; x += 1) lowConfidence[at(x, y)] = value
+}
+paintValue(60, 110, 20, 90, 0.95) // 몸통: 확신 높음
+paintValue(70, 78, 91, 160, 0.55) // 다리: 확신 낮음 (그래도 사람 영역 안쪽)
+const legAlpha = buildAlphaMap(lowConfidence, BW, BH)
+assert.equal(legAlpha[at(74, 130)], 1, '다리 안쪽은 원본 신뢰도가 낮아도 완전히 불투명해야 한다')
+
 // 경계는 딱 잘리지 않고 중간값을 가진다
 const soft = new Float32Array(BW * BH)
 for (let y = 20; y <= 90; y += 1) {

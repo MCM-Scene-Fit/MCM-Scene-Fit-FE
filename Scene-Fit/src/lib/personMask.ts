@@ -193,9 +193,12 @@ function smoothstep(edge0: number, edge1: number, value: number) {
  * 사람만 남긴 알파 맵.
  *
  * 마스크를 0/1로 딱 잘라 깎으면 얇은 종아리·손가락이 통째로 사라지고 경계가 뭉툭해진다.
- * 그래서 잘라내는 일과 경계를 다듬는 일을 나눈다.
- *  - 어디까지가 사람인지(연결 관계)는 0/1로 판단하고,
- *  - 경계선 자체는 마스크의 원래 농담을 살려 부드럽게 넘긴다.
+ * 반대로 원본 신뢰도 값을 계속 알파에 반영하면, 다리처럼 원래 신뢰도가 낮게 나오는
+ * 부위 전체가 희미해져서 그림자를 두른 것처럼 보인다.
+ *
+ * 그래서 "어디까지가 사람인가"와 "경계선을 어떻게 그릴까"를 완전히 분리한다.
+ *  - 사람 영역 안쪽(interior)은 원본 신뢰도와 무관하게 무조건 alpha=1.
+ *  - 경계선 바로 그 폭만큼만 원본 신뢰도로 부드럽게 넘긴다 — 진짜 윤곽선만 다듬는다.
  */
 export function buildAlphaMap(coverage: Float32Array, width: number, height: number) {
   const binary = new Uint8Array(width * height)
@@ -210,14 +213,20 @@ export function buildAlphaMap(coverage: Float32Array, width: number, height: num
     height,
     bridge,
   )
-  // 부드러운 경계는 core 바로 바깥까지 허용한다. 여기서 자르면 다시 딱딱해진다.
-  const gate = dilate(core, width, height, 2)
+
+  // 경계 폭. 이 폭 밖은 무조건 1, 안은 무조건 0, 그 사이 얇은 테두리만 신뢰도로 넘긴다.
+  const edge = 2
+  const interior = erode(core, width, height, edge)
+  const gate = dilate(core, width, height, edge)
 
   const alpha = new Float32Array(width * height)
   for (let i = 0; i < alpha.length; i += 1) {
-    if (!gate[i]) continue
-    // 0.5가 아니라 조금 안쪽에서 넘긴다 — 경계 픽셀에는 배경색이 섞여 있어 후광이 된다.
-    alpha[i] = smoothstep(0.45, 0.72, coverage[i] ?? 0)
+    if (interior[i]) {
+      alpha[i] = 1
+    } else if (gate[i]) {
+      // 0.5가 아니라 조금 안쪽에서 넘긴다 — 경계 픽셀에는 배경색이 섞여 있어 후광이 된다.
+      alpha[i] = smoothstep(0.45, 0.72, coverage[i] ?? 0)
+    }
   }
   return alpha
 }

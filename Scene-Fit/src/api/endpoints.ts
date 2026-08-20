@@ -217,7 +217,9 @@ export async function postSceneConcept(conditions: ApiConditions) {
   return data as SceneConceptCopy
 }
 
-export type SceneBackground = { url: string; place: string; cached: boolean }
+// 컨셉 문구도 이 응답에 같이 실려 온다 — 예전에는 /ai/scene-concept를 따로 불렀는데,
+// 배경/인물을 만드는 OpenAI 호출이 이미 컨셉도 만들 수 있어서 호출 하나를 줄였다.
+export type SceneBackground = { url: string; place: string; concept: string; description: string; cached: boolean }
 
 export async function postSceneBackground(conditions: ApiConditions) {
   try {

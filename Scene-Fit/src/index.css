@@ -1572,9 +1572,9 @@ p {
 }
 
 .silhouette--dark {
-  fill: none;
+  fill: #2b211c;
   stroke: #2b211c;
-  stroke-width: 1.8;
+  stroke-width: 1.2;
   stroke-linejoin: round;
   stroke-linecap: round;
   opacity: 0.92;

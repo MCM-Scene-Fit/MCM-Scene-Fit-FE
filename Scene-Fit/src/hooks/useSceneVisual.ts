@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { isMockMode, postSceneBackground, postSceneConcept, postScenePortrait, toApiConditions } from '../api'
+import { isMockMode, postSceneBackground, postScenePortrait, toApiConditions } from '../api'
 import type { BodyProfile, Conditions } from '../types'
 
 export type SceneVisual = {
@@ -56,19 +56,19 @@ export function useSceneVisual(
     if (state?.key === key || failedKey === key) return undefined
 
     let cancelled = false
-    const conceptPromise = postSceneConcept(payload)
+    // 컨셉 문구는 배경/인물 응답에 같이 실려 온다 — 따로 부르지 않는다.
     const imagePromise = wantsPortrait
       ? postScenePortrait({ ...payload, heightCm: body.heightCm, build: body.build, sex: body.sex })
       : postSceneBackground(payload)
 
-    void Promise.all([conceptPromise, imagePromise])
-      .then(([concept, image]) => {
+    void imagePromise
+      .then((image) => {
         if (cancelled) return
         setState({
           key,
           visual: {
-            concept: concept?.concept ?? null,
-            description: concept?.description ?? null,
+            concept: image?.concept ?? null,
+            description: image?.description ?? null,
             place: image?.place ?? null,
             backgroundUrl: wantsPortrait ? null : (image?.url ?? null),
             portraitUrl: wantsPortrait ? (image?.url ?? null) : null,
