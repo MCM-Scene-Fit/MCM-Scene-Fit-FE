@@ -76,36 +76,35 @@ export function erode(
   return pass(pass(binary, true), false)
 }
 
-/** 알파를 살짝 번지게 해 자른 자국을 없앤다. */
-export function featherAlpha(
+/** 침식의 반대. 깎아 낸 만큼 다시 부풀린다. */
+export function dilate(
   binary: Uint8Array,
   width: number,
   height: number,
   r: number,
-): Float32Array {
-  const src = Float32Array.from(binary)
-  if (r <= 0) return src
-  const window = r * 2 + 1
-  const clamp = (value: number, max: number) => Math.min(max, Math.max(0, value))
-
-  const mid = new Float32Array(src.length)
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      let sum = 0
-      for (let d = -r; d <= r; d += 1) sum += src[y * width + clamp(x + d, width - 1)]
-      mid[y * width + x] = sum / window
+): Uint8Array {
+  if (r <= 0) return binary
+  const pass = (src: Uint8Array, horizontal: boolean) => {
+    const dst = new Uint8Array(src.length)
+    const outer = horizontal ? height : width
+    const inner = horizontal ? width : height
+    for (let a = 0; a < outer; a += 1) {
+      for (let b = 0; b < inner; b += 1) {
+        let hit = 0
+        for (let d = -r; d <= r; d += 1) {
+          const c = b + d
+          if (c < 0 || c >= inner) continue
+          if (src[horizontal ? a * width + c : c * width + a]) {
+            hit = 1
+            break
+          }
+        }
+        dst[horizontal ? a * width + b : b * width + a] = hit
+      }
     }
+    return dst
   }
-
-  const out = new Float32Array(src.length)
-  for (let x = 0; x < width; x += 1) {
-    for (let y = 0; y < height; y += 1) {
-      let sum = 0
-      for (let d = -r; d <= r; d += 1) sum += mid[clamp(y + d, height - 1) * width + x]
-      out[y * width + x] = sum / window
-    }
-  }
-  return out
+  return pass(pass(binary, true), false)
 }
 
 /** 마스크는 사진보다 훨씬 작다. 이웃 값을 섞어 계단 현상을 없앤다. */
@@ -184,11 +183,41 @@ export function gradeTowardScene(
   }
 }
 
-/** 확신이 높은 부분만 남기고 → 사람 덩어리만 골라내고 → 경계를 깎은 뒤 부드럽게 번지게 한다. */
+/** 0~1 사이를 부드럽게 잇는다. 딱 잘린 경계 대신 자연스러운 이음매를 만든다. */
+function smoothstep(edge0: number, edge1: number, value: number) {
+  const t = Math.min(1, Math.max(0, (value - edge0) / (edge1 - edge0)))
+  return t * t * (3 - 2 * t)
+}
+
+/**
+ * 사람만 남긴 알파 맵.
+ *
+ * 마스크를 0/1로 딱 잘라 깎으면 얇은 종아리·손가락이 통째로 사라지고 경계가 뭉툭해진다.
+ * 그래서 잘라내는 일과 경계를 다듬는 일을 나눈다.
+ *  - 어디까지가 사람인지(연결 관계)는 0/1로 판단하고,
+ *  - 경계선 자체는 마스크의 원래 농담을 살려 부드럽게 넘긴다.
+ */
 export function buildAlphaMap(coverage: Float32Array, width: number, height: number) {
-  // 0.6 이상만 사람으로 본다. 예전 기준(0.25)은 배경까지 사람으로 받아들였다.
   const binary = new Uint8Array(width * height)
-  for (let i = 0; i < binary.length; i += 1) binary[i] = (coverage[i] ?? 0) >= 0.6 ? 1 : 0
-  const radius = Math.max(1, Math.round(width / 220))
-  return featherAlpha(erode(largestBlob(binary, width, height), width, height, radius), width, height, radius)
+  for (let i = 0; i < binary.length; i += 1) binary[i] = (coverage[i] ?? 0) >= 0.5 ? 1 : 0
+
+  // 떨어져 있는 조각은 물론, 손 근처에서 가늘게 이어진 물체(유모차·간판 등)도 끊어 낸다.
+  // 깎았다가 도로 부풀리면 굵은 몸통은 살아남고 가는 연결만 끊긴다.
+  const bridge = Math.max(1, Math.round(width / 128))
+  const core = dilate(
+    largestBlob(erode(binary, width, height, bridge), width, height),
+    width,
+    height,
+    bridge,
+  )
+  // 부드러운 경계는 core 바로 바깥까지 허용한다. 여기서 자르면 다시 딱딱해진다.
+  const gate = dilate(core, width, height, 2)
+
+  const alpha = new Float32Array(width * height)
+  for (let i = 0; i < alpha.length; i += 1) {
+    if (!gate[i]) continue
+    // 0.5가 아니라 조금 안쪽에서 넘긴다 — 경계 픽셀에는 배경색이 섞여 있어 후광이 된다.
+    alpha[i] = smoothstep(0.45, 0.72, coverage[i] ?? 0)
+  }
+  return alpha
 }

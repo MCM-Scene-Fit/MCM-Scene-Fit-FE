@@ -3,7 +3,7 @@
  * 합성 품질이 여기 로직에 걸려 있어서, 깨지면 바로 알아채야 한다.
  */
 import assert from 'node:assert'
-import { buildAlphaMap, erode, largestBlob } from './personMask'
+import { buildAlphaMap, dilate, erode, largestBlob } from './personMask'
 
 const W = 12
 const H = 8
@@ -55,15 +55,46 @@ const edge = new Uint8Array(W * H)
 for (let y = 0; y < 3; y += 1) for (let x = 0; x < 3; x += 1) edge[index(x, y)] = 1
 assert.equal(erode(edge, W, H, 1)[index(0, 0)], 0, '가장자리에 붙어 있어도 깎여야 한다')
 
-// 확신이 낮은 픽셀은 사람으로 치지 않는다
-const coverage = new Float32Array(W * H)
-coverage[index(3, 3)] = 0.9
-coverage[index(8, 3)] = 0.4
-const alpha = buildAlphaMap(coverage, W, H)
-assert.equal(alpha[index(8, 3)], 0, '0.6 미만은 배경으로 본다')
+// 부풀리기는 깎기를 되돌린다
+assert.equal(
+  dilate(eroded, W, H, 1).reduce((a, b) => a + b, 0),
+  20,
+  '깎은 만큼 부풀리면 원래 굵기로 돌아온다',
+)
+
+// 넓은 화면에서: 굵은 몸통 + 가는 다리 + 가늘게 이어진 물체
+const BW = 260
+const BH = 200
+const at = (x: number, y: number) => y * BW + x
+const wide = new Float32Array(BW * BH)
+const paint = (x0: number, x1: number, y0: number, y1: number) => {
+  for (let y = y0; y <= y1; y += 1) for (let x = x0; x <= x1; x += 1) wide[at(x, y)] = 1
+}
+paint(60, 110, 20, 90) // 몸통
+paint(70, 78, 91, 150) // 왼쪽 다리 (가늘다)
+paint(92, 100, 91, 150) // 오른쪽 다리
+paint(111, 113, 60, 62) // 손 근처 가는 연결
+paint(114, 150, 45, 100) // 옆에 붙은 물체
+
+const wideAlpha = buildAlphaMap(wide, BW, BH)
+assert.ok(wideAlpha[at(85, 55)] > 0.9, '몸통은 남아야 한다')
+assert.ok(wideAlpha[at(74, 140)] > 0.9, '가는 다리도 살아 있어야 한다')
+assert.equal(wideAlpha[at(140, 70)], 0, '가늘게 이어진 옆 물체는 끊겨야 한다')
 assert.ok(
-  alpha.every((value) => value >= 0 && value <= 1),
+  wideAlpha.every((value) => value >= 0 && value <= 1),
   '알파는 0~1 범위여야 한다',
+)
+
+// 경계는 딱 잘리지 않고 중간값을 가진다
+const soft = new Float32Array(BW * BH)
+for (let y = 20; y <= 90; y += 1) {
+  for (let x = 60; x <= 110; x += 1) soft[at(x, y)] = 1
+  soft[at(111, y)] = 0.6 // 경계 한 겹은 어중간한 값
+}
+const softAlpha = buildAlphaMap(soft, BW, BH)
+assert.ok(
+  softAlpha[at(111, 55)] > 0 && softAlpha[at(111, 55)] < 1,
+  '경계는 0도 1도 아닌 중간값이어야 자연스럽다',
 )
 
 console.log('personMask 검사 통과')
