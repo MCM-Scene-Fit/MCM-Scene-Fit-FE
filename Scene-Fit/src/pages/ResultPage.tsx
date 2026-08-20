@@ -132,6 +132,7 @@ export function ResultPage() {
   return (
     <main className="page has-sticky page-result">
       <StepHeader
+        variant="catalog"
         step={4}
         title="이 장면에서의 적합 정도"
         caption="총점 대신 세 구간으로 맞는지, 확인할 점을 보여 줍니다."

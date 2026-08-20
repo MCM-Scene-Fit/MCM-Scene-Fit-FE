@@ -13,8 +13,9 @@ import {
   readSceneTone,
   type BodyAnalysis,
 } from '../lib/bodyAnalysis'
-import { bagBoxPx, containedSize, personHeightPx } from '../lib/previewFit'
+import { bagBoxPx, containedSize, HEIGHT_MAX_CM, personHeightPx } from '../lib/previewFit'
 import { SILHOUETTE_ANCHOR_VIEW, silhouetteBagAnchor, wearAnchorFromPose, type StrapPoint } from '../lib/wearAnchor'
+import { getColor } from '../data/products'
 import type { SceneTone } from '../lib/personMask'
 import type { BodyProfile, PreviewMode, Product, WearStyle } from '../types'
 import { HumanSilhouette } from './HumanSilhouette'
@@ -32,7 +33,6 @@ type WearPreviewProps = {
   mode: PreviewMode
   photoUrl: string | null
   body: BodyProfile
-  wearStyle: WearStyle
   bag: BagTransform
   onBagChange: (bag: Partial<BagTransform>) => void
   onUploadClick: () => void
@@ -67,7 +67,6 @@ export function WearPreview({
   mode,
   photoUrl,
   body,
-  wearStyle,
   bag,
   onBagChange,
   onUploadClick,
@@ -124,14 +123,15 @@ export function WearPreview({
             ? 'ready'
             : 'idle'
   const activeFigure =
-    isPhotoLike && figure.url === effectivePhotoUrl ? figure : EMPTY_BOX
-  const bagBox = isPhotoLike ? photoBagBox : silhouetteBagBox
-  const showBag = usingFlatSilhouette || isPhotoLike
-  const bagBehind = usingFlatSilhouette
-    ? SILHOUETTE_ANCHOR_VIEW[wearStyle].behindPerson
-    : Boolean(
-        activeAnalysis && wearAnchorFromPose(wearStyle, activeAnalysis.landmarks).behindPerson,
-      )
+isPhotoLike && figure.url === effectivePhotoUrl ? figure : EMPTY_BOX
+const bagBox = isPhotoLike ? photoBagBox : silhouetteBagBox
+const showBag = usingFlatSilhouette || isPhotoLike
+const bagBehind = usingFlatSilhouette
+  ? SILHOUETTE_ANCHOR_VIEW[wearStyle].behindPerson
+  : Boolean(
+      activeAnalysis && wearAnchorFromPose(wearStyle, activeAnalysis.landmarks).behindPerson,
+    )
+const color = getColor(product, colorId)
 
   const measureBag = useEffectEvent(() => {
     const stage = stageRef.current
@@ -156,7 +156,13 @@ export function WearPreview({
       const ratio = analysis?.url === effectivePhotoUrl ? analysis.body.personHeightRatio : null
       const avatarPx = nextFigure.height * (ratio ?? 0.9)
       if (avatarPx <= 0) return
-      const nextBox = bagBoxPx(product, avatarPx, body.heightCm)
+      const nextBox = bagBoxPx(
+        product,
+        avatarPx,
+        body.heightCm,
+        color.imageWidth,
+        color.imageHeight,
+      )
       setPhotoBagBox((prev) => (sameBox(prev, nextBox) ? prev : nextBox))
       return
     }
@@ -169,7 +175,13 @@ export function WearPreview({
       silhouette: silhouetteRef.current,
     })
     if (avatarPx <= 0) return
-    const nextBox = bagBoxPx(product, avatarPx, body.heightCm)
+    const nextBox = bagBoxPx(
+      product,
+      avatarPx,
+      body.heightCm,
+      color.imageWidth,
+      color.imageHeight,
+    )
     setSilhouetteBagBox((prev) => (sameBox(prev, nextBox) ? prev : nextBox))
   })
 
@@ -185,59 +197,58 @@ export function WearPreview({
       cancelAnimationFrame(frame)
       observer.disconnect()
     }
-  }, [isPhotoLike, effectivePhotoUrl, product, body.heightCm, activeAnalysis])
+}, [isPhotoLike, effectivePhotoUrl, product, colorId, body.heightCm, activeAnalysis])
 
-  useEffect(() => {
-    if (usingFlatSilhouette) {
-      // 몸 좌표(viewBox)를 현재 그려진 화면 좌표로 옮긴다.
-      // 키·체형이 바뀌어 몸이 커져도 가방이 같은 부위에 남는다.
-      const view = SILHOUETTE_ANCHOR_VIEW[wearStyle]
-      const svg = silhouetteRef.current
-      const figure = figureRef.current
-      const group = svg?.querySelector('g')
-      const matrix = group?.getScreenCTM()
-      const box = figure?.getBoundingClientRect()
+useEffect(() => {
+  if (usingFlatSilhouette) {
+    // 몸 좌표(viewBox)를 현재 그려진 화면 좌표로 옮긴다.
+    // 키·체형이 바뀌어 몸이 커져도 가방이 같은 부위에 남는다.
+    const view = SILHOUETTE_ANCHOR_VIEW[wearStyle]
+    const svg = silhouetteRef.current
+    const figure = figureRef.current
+    const group = svg?.querySelector('g')
+    const matrix = group?.getScreenCTM()
+    const box = figure?.getBoundingClientRect()
 
-      if (!matrix || !box || box.width <= 0 || box.height <= 0) {
-        const fallback = silhouetteBagAnchor(wearStyle)
-        onBagChange({ x: fallback.x, y: fallback.y })
-        setStrapPoints([])
-        return
-      }
-
-      const toPct = (p: StrapPoint) => {
-        const t = new DOMPoint(p.x, p.y).matrixTransform(matrix)
-        return { x: ((t.x - box.left) / box.width) * 100, y: ((t.y - box.top) / box.height) * 100 }
-      }
-      onBagChange(toPct(view))
-      setStrapPoints(view.strapPoints.map(toPct))
+    if (!matrix || !box || box.width <= 0 || box.height <= 0) {
+      const fallback = silhouetteBagAnchor(wearStyle)
+      onBagChange({ x: fallback.x, y: fallback.y })
+      setStrapPoints([])
       return
     }
-    if (!activeAnalysis) return
-    const anchor = wearAnchorFromPose(wearStyle, activeAnalysis.landmarks)
-    onBagChange({
-      x: clamp(anchor.x, BAG_X_MIN, BAG_X_MAX),
-      y: clamp(anchor.y, BAG_Y_MIN, BAG_Y_MAX),
-    })
-    setStrapPoints(anchor.strapPoints)
-  }, [usingFlatSilhouette, wearStyle, activeAnalysis, body.heightCm, body.build, body.sex, onBagChange])
 
-  // 배경 톤을 미리 읽어 둔다. 인물을 이 톤에 맞춰야 붙여넣은 느낌이 사라진다.
-  useEffect(() => {
-    if (!backgroundUrl) return
-    let cancelled = false
-    void readSceneTone(backgroundUrl).then((tone) => {
-      if (!cancelled) setSceneTone({ url: backgroundUrl, tone })
-    })
-    return () => {
-      cancelled = true
+    const toPct = (p: StrapPoint) => {
+      const t = new DOMPoint(p.x, p.y).matrixTransform(matrix)
+      return { x: ((t.x - box.left) / box.width) * 100, y: ((t.y - box.top) / box.height) * 100 }
     }
-  }, [backgroundUrl])
+    onBagChange(toPct(view))
+    setStrapPoints(view.strapPoints.map(toPct))
+    return
+  }
+  if (!activeAnalysis) return
+  const anchor = wearAnchorFromPose(wearStyle, activeAnalysis.landmarks)
+  onBagChange({
+    x: clamp(anchor.x, BAG_X_MIN, BAG_X_MAX),
+    y: clamp(anchor.y, BAG_Y_MIN, BAG_Y_MAX),
+  })
+  setStrapPoints(anchor.strapPoints)
+}, [usingFlatSilhouette, wearStyle, activeAnalysis, body.heightCm, body.build, body.sex, onBagChange])
 
-  // 배경이 바뀌는 순간에는 이전 톤을 쓰지 않는다.
-  const activeTone =
-    sceneTone && backgroundUrl && sceneTone.url === backgroundUrl ? sceneTone.tone : null
+// 배경 톤을 미리 읽어 둔다. 인물을 이 톤에 맞춰야 붙여넣은 느낌이 사라진다.
+useEffect(() => {
+  if (!backgroundUrl) return
+  let cancelled = false
+  void readSceneTone(backgroundUrl).then((tone) => {
+    if (!cancelled) setSceneTone({ url: backgroundUrl, tone })
+  })
+  return () => {
+    cancelled = true
+  }
+}, [backgroundUrl])
 
+// 배경이 바뀌는 순간에는 이전 톤을 쓰지 않는다.
+const activeTone =
+  sceneTone && backgroundUrl && sceneTone.url === backgroundUrl ? sceneTone.tone : null
   useEffect(() => {
     const canvas = cutoutRef.current
     const photo = photoRef.current
@@ -325,7 +336,7 @@ export function WearPreview({
   const bagNode =
     showBag && bagBox.width > 0 ? (
       <div
-        className={`bag-layer ${dragging ? 'is-dragging' : ''} ${bagBehind ? 'is-behind' : ''}`}
+        className={`bag-layer ${dragging ? 'is-dragging' : ''}`}
         style={{
           left: `${bag.x}%`,
           top: `${bag.y}%`,
@@ -409,42 +420,42 @@ export function WearPreview({
                 : { width: '100%', height: '100%' }
             }
           >
-            {showSceneBackground ? (
-              <>
-                <img src={backgroundUrl ?? ''} alt="" className="scene-background" aria-hidden="true" />
-                {/* 발밑이 비면 사람이 배경 위에 떠 보인다. 접지면을 깔아 준다. */}
-                <div className="scene-ground-shade" aria-hidden="true" />
-              </>
-            ) : null}
-            <div
-              className="person-group"
-              style={
-                showSceneBackground
-                  ? { transform: `scale(${backgroundPersonScale})`, transformOrigin: 'bottom center' }
-                  : undefined
-              }
-            >
-              <img
-                ref={photoRef}
-                src={effectivePhotoUrl ?? ''}
-                alt={isAiPortrait ? 'AI가 키·체형으로 만든 인물 이미지' : '업로드한 전신 사진'}
-                className={`preview-photo ${showSceneBackground ? 'is-swapped' : ''}`}
-                onLoad={onPhotoReady}
-              />
-              {bagBehind ? bagNode : null}
-              {activeAnalysis?.mask ? (
-                <canvas
-                  ref={cutoutRef}
-                  className={`preview-cutout ${showSceneBackground ? 'is-swapped' : ''}`}
-                  aria-hidden="true"
-                />
-              ) : null}
-              {strapNode}
-              {!bagBehind ? bagNode : null}
-            </div>
-            {showSceneBackground ? <div className="scene-blend" aria-hidden="true" /> : null}
-            {isAiPortrait ? <p className="preview-ai-badge">AI 생성 이미지</p> : null}
-            {sceneLoading ? <SceneProgress /> : null}
+{showSceneBackground ? (
+  <>
+    <img src={backgroundUrl ?? ''} alt="" className="scene-background" aria-hidden="true" />
+    {/* 발밑이 비면 사람이 배경 위에 떠 보인다. 접지면을 깔아 준다. */}
+    <div className="scene-ground-shade" aria-hidden="true" />
+  </>
+) : null}
+<div
+  className="person-group"
+  style={
+    showSceneBackground
+      ? { transform: `scale(${backgroundPersonScale})`, transformOrigin: 'bottom center' }
+      : undefined
+  }
+>
+  <img
+    ref={photoRef}
+    src={effectivePhotoUrl ?? ''}
+    alt={isAiPortrait ? 'AI가 키·체형으로 만든 인물 이미지' : '업로드한 전신 사진'}
+    className={`preview-photo ${showSceneBackground ? 'is-swapped' : ''}`}
+    onLoad={onPhotoReady}
+  />
+  {bagBehind ? bagNode : null}
+  {activeAnalysis?.mask ? (
+    <canvas
+      ref={cutoutRef}
+      className={`preview-cutout ${showSceneBackground ? 'is-swapped' : ''}`}
+      aria-hidden="true"
+    />
+  ) : null}
+  {strapNode}
+  {!bagBehind ? bagNode : null}
+</div>
+{showSceneBackground ? <div className="scene-blend" aria-hidden="true" /> : null}
+{isAiPortrait ? <p className="preview-ai-badge">AI 생성 이미지</p> : null}
+{sceneLoading ? <SceneProgress /> : null}
             {status === 'loading' ? (
               <p className="preview-status">이 기기에서 자세를 읽는 중</p>
             ) : null}
@@ -474,16 +485,15 @@ export function WearPreview({
         {mode === 'photo' && !photoUrl ? (
           <div className="preview-empty">
             <strong>내 전신 사진을 올려 주세요</strong>
-            <span>이 기기에서 자세를 읽어, 가방을 어깨·손·허리에 올립니다.</span>
-            <div className="preview-empty__actions">
-              <button type="button" className="btn btn-primary" onClick={onUploadClick}>
-                사진 올리기
-              </button>
-              <button type="button" className="btn btn-ghost" onClick={onCameraClick}>
-                카메라로 찍기
-              </button>
-            </div>
-          </div>
+  <span>이 기기에서 자세를 읽어, 가방을 어깨·손·허리에 올립니다.</span>
+  <div className="preview-empty__actions">
+    <button type="button" className="btn btn-primary" onClick={onUploadClick}>
+      사진 올리기
+    </button>
+    <button type="button" className="btn btn-ghost" onClick={onCameraClick}>
+      카메라로 찍기
+    </button>
+  </div>  
         ) : null}
         <p className="preview-sticker">미리보기</p>
       </div>

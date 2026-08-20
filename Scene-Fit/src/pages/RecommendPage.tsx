@@ -5,13 +5,14 @@ import { BrandLogo } from '../components/BrandLogo'
 import { ConditionsExtras } from '../components/ConditionsExtras'
 import { ConditionsWizard } from '../components/ConditionsWizard'
 import { ProductCard } from '../components/ProductCard'
-import { StickyBar } from '../components/StepHeader'
+import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
 import { applyItemToggle, applyPresetChange, type PresetKind } from '../data/itemPresets'
 import { useSceneConcept } from '../hooks/useSceneConcept'
 import { CONDITION_STEPS, initialWizardStep } from '../lib/conditionsWizard'
 import { isMockMode, postRecommend, toApiConditions } from '../api'
 import { runFitCheck } from '../lib/fitCheck'
+import { productSupportsWear } from '../lib/wearStyle'
 import { useCatalogStore } from '../store/useCatalogStore'
 import { type Conditions, type ItemId, type Product } from '../types'
 
@@ -49,7 +50,7 @@ export function RecommendPage() {
           result.carryCheck.items.filter((item) => item.level === 'confirmed').length +
           (result.rewearPotential.positive ? 1 : 0) -
           result.carryCheck.items.filter((item) => item.level === 'unlikely').length * 4 -
-          (draft.wearStyle && !product.wearStyles.includes(draft.wearStyle) ? 6 : 0)
+          (draft.wearStyle && !productSupportsWear(product, draft.wearStyle) ? 6 : 0)
         return { product, score }
       })
       .filter((entry) => entry.score > 0)
@@ -109,16 +110,14 @@ export function RecommendPage() {
   }
 
   return (
-    <main className="page has-sticky">
-      <header className="step-header">
-        <BrandLogo compact />
-        <div className="step-header__top">
-          <BackButton onClick={() => (step === 1 ? navigate('/') : setStep(step - 1))} />
-          <p className="eyebrow">보조 진입 · 필수 {step}/4</p>
-        </div>
-        <h1>{current.title}</h1>
-        <p className="muted">{current.caption}</p>
-      </header>
+<main className={`page ${step >= 3 ? 'has-sticky' : ''}`}>
+  <StepHeader
+    variant="catalog"
+    step={3}
+    title={current.title}
+    caption={current.caption}
+    onBack={() => (step === 1 ? navigate('/preview') : setStep(step - 1))}
+  />
 
       <ConditionsWizard
         value={draft}

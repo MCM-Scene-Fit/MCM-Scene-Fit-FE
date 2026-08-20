@@ -60,6 +60,7 @@ export const WEAR_LABEL: Record<WearStyle, string> = {
   shoulder: '숄더',
   crossbody: '크로스바디',
   backpack: '백팩',
+  'long-strap': '긴 줄',
 }
 
 export const WEAR_ICON: Record<WearStyle, string> = {
@@ -67,6 +68,7 @@ export const WEAR_ICON: Record<WearStyle, string> = {
   shoulder: '👛',
   crossbody: '👜',
   backpack: '🎒',
+  'long-strap': '🪢',
 }
 
 export const WEAR_HINT: Record<WearStyle, string> = {
@@ -74,6 +76,7 @@ export const WEAR_HINT: Record<WearStyle, string> = {
   shoulder: '한쪽 어깨에 걸쳐 가볍게 메는 형태',
   crossbody: '양손이 자유롭고 오래 걷기 좋음',
   backpack: '무게를 분산해 장거리 이동에 편함',
+  'long-strap': '긴 줄을 한쪽 어깨에 걸쳐 힙 높이로 내리는 형태',
 }
 
 export const ITEM_LABEL: Record<ItemId, string> = Object.fromEntries(

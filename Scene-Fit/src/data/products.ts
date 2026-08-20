@@ -6,6 +6,7 @@ import type { Product, ProductColor } from '../types'
  * 수납 `officialStorage`는 상세 페이지에 해당 품목이 명시된 경우만 넣는다.
  * 치수는 공식 표기(깊이 × 가로 × 세로 cm)를 width/height/depth(mm)로 변환했다.
  * 이미지는 공식 정면 컷과 갤러리 옆면 컷(_02)을 로컬 자산으로 등록한 것이다.
+ * `hasLongStrap`은 공식 상세에 탈부착·긴 어깨 스트랩이 있는 제품만 true다.
  * 런타임에 공식몰을 호출하지 않는다.
  */
 
@@ -65,6 +66,7 @@ export const PRODUCTS: Product[] = [
     sizeLabel: 'S',
     wearStyles: ['crossbody'],
     strapAdjustable: true,
+    hasLongStrap: true,
     officialStorage: [],
     pockets: 1,
     material: 'ECONYL® 재생 나일론, 비세토스 모노그램 모티프',
@@ -90,6 +92,7 @@ export const PRODUCTS: Product[] = [
     sizeLabel: 'Mini',
     wearStyles: ['crossbody'],
     strapAdjustable: true,
+    hasLongStrap: true,
     officialStorage: ['phone', 'wallet'],
     pockets: 2,
     material: '비세토스 모노그램 캔버스, 나파 가죽 트림',
@@ -115,6 +118,7 @@ export const PRODUCTS: Product[] = [
     sizeLabel: 'S',
     wearStyles: ['shoulder'],
     strapAdjustable: false,
+    hasLongStrap: false,
     officialStorage: ['wallet'],
     pockets: 1,
     material: '비세토스 모노그램 캔버스, 레더 트림',
@@ -137,6 +141,7 @@ export const PRODUCTS: Product[] = [
     sizeLabel: 'S',
     wearStyles: ['shoulder', 'crossbody'],
     strapAdjustable: true,
+    hasLongStrap: true,
     officialStorage: [],
     pockets: 1,
     material: '비세토스 모노그램 캔버스, 나파 가죽 트림',
@@ -160,8 +165,9 @@ export const PRODUCTS: Product[] = [
     heightMm: 190,
     depthMm: 100,
     sizeLabel: 'Mini',
-    wearStyles: ['tote', 'crossbody'],
+    wearStyles: ['tote', 'shoulder', 'crossbody'],
     strapAdjustable: true,
+    hasLongStrap: true,
     officialStorage: [],
     pockets: 3,
     material: '비세토스 모노그램 코티드 캔버스, 나파 가죽 트림',
@@ -187,6 +193,7 @@ export const PRODUCTS: Product[] = [
     sizeLabel: 'M',
     wearStyles: ['tote', 'shoulder'],
     strapAdjustable: false,
+    hasLongStrap: false,
     officialStorage: ['pouch'],
     pockets: 1,
     material: '비세토스 모노그램 캔버스, 나파 가죽 트림',
@@ -209,6 +216,7 @@ export const PRODUCTS: Product[] = [
     sizeLabel: 'XL',
     wearStyles: ['tote', 'shoulder'],
     strapAdjustable: true,
+    hasLongStrap: false,
     officialStorage: [],
     pockets: 1,
     material: 'ECONYL® 재생 나일론, 비세토스 모노그램 모티프',
@@ -231,6 +239,7 @@ export const PRODUCTS: Product[] = [
     sizeLabel: 'M',
     wearStyles: ['backpack'],
     strapAdjustable: true,
+    hasLongStrap: false,
     officialStorage: ['laptop13', 'tablet'],
     pockets: 4,
     material: '비세토스 모노그램 캔버스, 천연 나파 가죽 트림',
@@ -253,6 +262,7 @@ export const PRODUCTS: Product[] = [
     sizeLabel: 'Extra Mini',
     wearStyles: ['backpack', 'crossbody'],
     strapAdjustable: true,
+    hasLongStrap: true,
     officialStorage: ['wallet'],
     pockets: 3,
     material: '비세토스 모노그램 캔버스, 천연 나파 가죽 트림',
@@ -278,6 +288,7 @@ export const PRODUCTS: Product[] = [
     sizeLabel: '41cm',
     wearStyles: ['tote', 'shoulder'],
     strapAdjustable: true,
+    hasLongStrap: true,
     officialStorage: [],
     pockets: 2,
     material: '비세토스 모노그램 캔버스, 나파 가죽 트림',

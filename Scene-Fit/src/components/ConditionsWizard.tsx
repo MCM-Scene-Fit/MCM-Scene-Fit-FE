@@ -171,7 +171,10 @@ export function ConditionsWizard({
             {WEAR_STYLES.map((wear) => (
               <ChoiceCard
                 key={wear}
-                on={value.wearStyle === wear}
+                on={
+                  value.wearStyle === wear ||
+                  (wear === 'shoulder' && value.wearStyle === 'long-strap')
+                }
                 icon={WEAR_ICON[wear]}
                 title={WEAR_LABEL[wear]}
                 hint={WEAR_HINT[wear]}

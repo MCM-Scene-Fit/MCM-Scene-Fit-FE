@@ -29,6 +29,7 @@ export function FitPassPage() {
   return (
     <main className="page has-sticky">
       <StepHeader
+        variant="catalog"
         step={6}
         title="Store Fit Pass"
         caption="매장에 “이 제품을 보여 주세요”가 아니라, 확인하고 싶은 질문을 전달합니다."

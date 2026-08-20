@@ -3,6 +3,7 @@ import { CARRY_SCORE_POINTS, SCENE_LABEL, WEAR_LABEL } from '../data/labels'
 import { sumCarryLoad } from '../data/items'
 import { PRODUCTS } from '../data/products'
 import { formatOccupancy, itemFitsProduct, judgeItemFit } from './itemFit'
+import { productSupportsWear } from './wearStyle'
 import type {
   AxisStatus,
   Conditions,
@@ -126,10 +127,10 @@ function findAlternative(product: Product, conditions: Conditions, catalog: Prod
   const ranked = catalog.filter((candidate) => candidate.id !== product.id)
     .map((candidate) => {
       let score = 0
-      if (wear && candidate.wearStyles.includes(wear)) score += 4
+      if (wear && productSupportsWear(candidate, wear)) score += 4
       if (scene && candidate.sceneTags.includes(scene)) score += 3
       score += items.filter((item) => candidate.officialStorage.includes(item)).length
-      if (wear && !candidate.wearStyles.includes(wear)) score -= 5
+      if (wear && !productSupportsWear(candidate, wear)) score -= 5
       if (items.some((item) => !itemFitsProduct(item, candidate, resolveCarryItem(item, conditions.itemPresets)))) score -= 4
       return { candidate, score }
     })
@@ -160,7 +161,7 @@ export function runFitCheck(
 
   const itemVerdicts = conditions.items.map((item) => verdictForItem(product, item, conditions))
   const wearOk = Boolean(
-    conditions.wearStyle && product.wearStyles.includes(conditions.wearStyle),
+    conditions.wearStyle && productSupportsWear(product, conditions.wearStyle),
   )
 
   const carryCheck = {

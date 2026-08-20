@@ -1,9 +1,11 @@
 import { ITEM_LABEL } from '../data/labels'
 import { PRODUCTS } from '../data/products'
 import { deriveLikelyStorage } from '../lib/itemFit'
+import { toCatalogWearStyle } from '../lib/wearStyle'
 import type {
   AxisStatus,
   CarryLoad,
+  CatalogWearStyle,
   Conditions,
   EvidenceLevel,
   FitPassExperience,
@@ -17,7 +19,6 @@ import type {
   ProductColor,
   Scene,
   Store,
-  WearStyle,
 } from '../types'
 import { ITEMS } from '../types'
 
@@ -25,7 +26,7 @@ export type ApiConditions = {
   scene: Scene
   mobility: Mobility
   items: ItemId[]
-  wearStyle: WearStyle
+  wearStyle: CatalogWearStyle
   destination?: string
   rewearScene?: Scene
 }
@@ -156,8 +157,9 @@ export function normalizeProduct(raw: ApiProduct): Product | null {
     heightMm,
     depthMm,
     sizeLabel: raw.sizeLabel || local?.sizeLabel || '',
-    wearStyles: raw.wearStyles ?? local?.wearStyles ?? [],
+    wearStyles: Array.from(new Set([...(local?.wearStyles ?? []), ...(raw.wearStyles ?? [])])),
     strapAdjustable: raw.strapAdjustable ?? local?.strapAdjustable ?? false,
+    hasLongStrap: raw.hasLongStrap ?? local?.hasLongStrap ?? false,
     officialStorage,
     likelyStorage: raw.likelyStorage ?? local?.likelyStorage ?? deriveLikelyStorage(draft),
     pockets: raw.pockets ?? local?.pockets ?? 0,
@@ -245,7 +247,7 @@ export function toApiConditions(conditions: Conditions): ApiConditions | null {
     scene: conditions.scene,
     mobility: conditions.mobility,
     items: conditions.items,
-    wearStyle: conditions.wearStyle,
+    wearStyle: toCatalogWearStyle(conditions.wearStyle),
     destination: conditions.destination.trim() || undefined,
     rewearScene: conditions.rewearScene ?? undefined,
   }
