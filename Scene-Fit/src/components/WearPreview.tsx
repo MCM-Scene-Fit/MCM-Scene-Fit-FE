@@ -356,12 +356,17 @@ export function WearPreview({
   const strapNode =
     !productShowsOwnStraps && strapPoints.length > 0 && showBag ? (
       <svg className="strap-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        {strapPoints.map((point, index) => (
-          <path
-            key={index}
-            d={`M ${point.x} ${point.y} Q ${(point.x + bag.x) / 2} ${Math.min(point.y, bag.y) - 4} ${bag.x} ${bag.y}`}
-          />
-        ))}
+        {strapPoints.map((point, index) => {
+          const d = `M ${point.x} ${point.y} Q ${(point.x + bag.x) / 2} ${Math.min(point.y, bag.y) - 4} ${bag.x} ${bag.y}`
+          return (
+            // 실선 하나면 그려 넣은 선처럼 보인다. 폭이 있는 어깨끈 + 가운데 하이라이트로
+            // 가죽/원단 느낌의 두께감을 준다.
+            <g key={index}>
+              <path className="strap-base" d={d} />
+              <path className="strap-highlight" d={d} />
+            </g>
+          )
+        })}
       </svg>
     ) : null
 
