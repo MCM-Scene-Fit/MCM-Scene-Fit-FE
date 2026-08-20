@@ -28,7 +28,7 @@ export function ProductFilters({
     <section className="filters" aria-label="제품 필터">
       <div className="filters__meta">
         <p>
-          MCM P0 가방 <strong>{total}개</strong> 중 <strong>{shown}개</strong> 표시
+          MCM P0 가방 {total}개 중 {shown}개 표시
         </p>
         {active ? (
           <button type="button" className="text-btn filters__reset" onClick={onReset}>
@@ -43,6 +43,7 @@ export function ProductFilters({
             key={item.id}
             type="button"
             className={`chip ${filters.wear === item.id ? 'is-on' : ''}`}
+            aria-pressed={filters.wear === item.id}
             onClick={() => onChange({ wear: item.id })}
           >
             {item.label}
@@ -56,6 +57,7 @@ export function ProductFilters({
             key={item.id}
             type="button"
             className={`chip chip-color ${filters.color === item.id ? 'is-on' : ''}`}
+            aria-pressed={filters.color === item.id}
             onClick={() => onChange({ color: item.id })}
           >
             {item.hex ? (
@@ -72,6 +74,7 @@ export function ProductFilters({
             key={item.id}
             type="button"
             className={`chip ${filters.price === item.id ? 'is-on' : ''}`}
+            aria-pressed={filters.price === item.id}
             onClick={() => onChange({ price: item.id })}
           >
             {item.label}

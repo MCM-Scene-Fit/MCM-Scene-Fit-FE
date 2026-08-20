@@ -104,9 +104,13 @@ export type PreviewMode = 'photo' | 'silhouette'
 export const BUILDS = ['slim', 'standard', 'broad'] as const
 export type BodyBuild = (typeof BUILDS)[number]
 
+export const BODY_SEXES = ['female', 'male'] as const
+export type BodySex = (typeof BODY_SEXES)[number]
+
 export type BodyProfile = {
   heightCm: number
   build: BodyBuild
+  sex: BodySex
 }
 
 export type ItemVerdict = {

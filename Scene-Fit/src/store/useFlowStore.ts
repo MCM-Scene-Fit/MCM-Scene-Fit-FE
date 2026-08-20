@@ -81,6 +81,7 @@ function wearDefaultBag(wear: WearStyle | null) {
 const defaultBody: BodyProfile = {
   heightCm: 165,
   build: 'standard',
+  sex: 'female',
 }
 
 const initialState: FlowState = {

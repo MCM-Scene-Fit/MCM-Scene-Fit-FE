@@ -15,20 +15,17 @@ import type { ItemVerdict } from '../types'
 
 function NoteCard({
   tone,
-  eyebrow,
   title,
   empty,
   items,
 }: {
   tone: 'match' | 'weak' | 'check'
-  eyebrow: string
   title: string
   empty: string
   items: string[]
 }) {
   return (
     <article className={`note-card note-card--${tone}`}>
-      <p className="eyebrow">{eyebrow}</p>
       <h4>{title}</h4>
       <ul>
         {items.length ? items.map((line) => <li key={line}>{line}</li>) : <li>{empty}</li>}
@@ -77,7 +74,7 @@ export function ResultPage() {
   const alternative = result.alternativeId ? getCatalogProduct(result.alternativeId) : null
 
   return (
-    <main className="page has-sticky">
+    <main className="page has-sticky page-result">
       <StepHeader
         step={4}
         title="이 장면에서의 적합 정도"
@@ -122,21 +119,18 @@ export function ResultPage() {
       <section className="result-notes" aria-label="결과 요약">
         <NoteCard
           tone="match"
-          eyebrow="잘 맞음"
-          title="이 가방이 잘 맞는 이유"
+          title="이 가방을 추천하는 이유"
           empty="선택한 조건과 강하게 겹치는 공식 근거는 아직 적습니다."
           items={result.matches}
         />
         <NoteCard
           tone="weak"
-          eyebrow="안 맞음"
-          title="가장 안 맞는 조건"
+          title="제시한 조건과 낮은 적합성"
           empty="필수 조건에서 뚜렷한 불일치는 없습니다."
           items={result.mismatches}
         />
         <NoteCard
           tone="check"
-          eyebrow="매장 확인"
           title="매장에서 확인할 점"
           empty="지금 단계에서 따로 확인할 항목은 없습니다."
           items={result.storeChecks}

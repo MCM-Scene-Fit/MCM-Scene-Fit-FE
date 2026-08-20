@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { BackButton } from '../components/BackButton'
+import { BrandLogo } from '../components/BrandLogo'
 import { ConditionsWizard } from '../components/ConditionsWizard'
 import { ProductCard } from '../components/ProductCard'
 import { StickyBar } from '../components/StepHeader'
@@ -106,16 +108,9 @@ export function RecommendPage() {
   return (
     <main className={`page ${step >= 3 ? 'has-sticky' : ''}`}>
       <header className="step-header">
-        <p className="brand-mark">SCENE FIT</p>
+        <BrandLogo compact />
         <div className="step-header__top">
-          <button
-            type="button"
-            className="icon-btn"
-            onClick={() => (step === 1 ? navigate('/') : setStep(step - 1))}
-            aria-label="뒤로"
-          >
-            ←
-          </button>
+          <BackButton onClick={() => (step === 1 ? navigate('/') : setStep(step - 1))} />
           <p className="eyebrow">보조 진입 · 필수 {step}/4</p>
         </div>
         <h1>{current.title}</h1>

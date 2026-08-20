@@ -1,12 +1,12 @@
-import { useRef } from 'react'
+import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { StepHeader, StickyBar } from '../components/StepHeader'
+import { StepHeader } from '../components/StepHeader'
 import { WearPreview } from '../components/WearPreview'
 import { useFlow } from '../context/FlowContext'
-import { BUILD_LABEL, WEAR_LABEL } from '../data/labels'
+import { BUILD_LABEL, BODY_SEX_LABEL, WEAR_LABEL } from '../data/labels'
 import { getColor } from '../data/products'
 import { HEIGHT_MAX_CM, HEIGHT_MIN_CM } from '../lib/previewFit'
-import { BUILDS } from '../types'
+import { BODY_SEXES, BUILDS } from '../types'
 
 export function PreviewPage() {
   const navigate = useNavigate()
@@ -37,11 +37,16 @@ export function PreviewPage() {
     setPhotoUrl(URL.createObjectURL(file))
   }
 
+  const sliderProgress = {
+    '--slider-progress': `${((body.heightCm - HEIGHT_MIN_CM) / (HEIGHT_MAX_CM - HEIGHT_MIN_CM)) * 100}%`,
+  } as CSSProperties
+
   return (
-    <main className="page has-sticky">
+    <main className="page page-preview">
       <StepHeader
+        variant="catalog"
         step={2}
-        title="내 모습에서 미리 보기"
+        title="내 모습에서 미리보기"
         caption="실제 키를 입력하면, 공식 치수 비율로 가방 크기가 고정됩니다."
         backTo="/products"
       />
@@ -92,13 +97,14 @@ export function PreviewPage() {
                 {photoUrl ? '사진 다시 고르기' : '전신 사진 선택'}
               </button>
               <label className="slider">
-                <span>내 키 {body.heightCm}cm</span>
+                <span>내 키 {body.heightCm} cm</span>
                 <input
                   type="range"
                   min={HEIGHT_MIN_CM}
                   max={HEIGHT_MAX_CM}
                   step="1"
                   value={body.heightCm}
+                  style={sliderProgress}
                   onChange={(event) => setBody({ heightCm: Number(event.target.value) })}
                 />
               </label>
@@ -115,16 +121,31 @@ export function PreviewPage() {
               </p>
 
               <label className="slider">
-                <span>실루엣 키 {body.heightCm}cm</span>
+                <span>실루엣 키 {body.heightCm} cm</span>
                 <input
                   type="range"
                   min={HEIGHT_MIN_CM}
                   max={HEIGHT_MAX_CM}
                   step="1"
                   value={body.heightCm}
+                  style={sliderProgress}
                   onChange={(event) => setBody({ heightCm: Number(event.target.value) })}
                 />
               </label>
+
+              <p className="field-label">아바타</p>
+              <div className="chip-row">
+                {BODY_SEXES.map((sex) => (
+                  <button
+                    key={sex}
+                    type="button"
+                    className={`chip ${body.sex === sex ? 'is-on' : ''}`}
+                    onClick={() => setBody({ sex })}
+                  >
+                    {BODY_SEX_LABEL[sex]}
+                  </button>
+                ))}
+              </div>
 
               <p className="field-label">체형</p>
               <div className="chip-row">
@@ -165,22 +186,24 @@ export function PreviewPage() {
               <button
                 key={item.id}
                 type="button"
-                className={`swatch ${selectedColorId === item.id ? 'is-on' : ''}`}
-                style={{ background: item.hex }}
-                aria-label={item.name}
+                className={`chip chip-color ${selectedColorId === item.id ? 'is-on' : ''}`}
                 onClick={() => setColor(item.id)}
-              />
+              >
+                <span className="chip-dot" style={{ background: item.hex }} />
+                {item.name}
+              </button>
             ))}
-            <span className="muted">{color.name}</span>
           </div>
+
+          <button
+            type="button"
+            className="btn btn-primary preview-cta"
+            onClick={() => navigate('/conditions')}
+          >
+            장면과 조건 입력하기
+          </button>
         </div>
       </div>
-
-      <StickyBar>
-        <button type="button" className="btn btn-primary" onClick={() => navigate('/conditions')}>
-          장면과 조건 입력하기
-        </button>
-      </StickyBar>
     </main>
   )
 }
