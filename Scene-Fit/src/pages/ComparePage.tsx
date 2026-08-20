@@ -49,16 +49,19 @@ export function ComparePage() {
       />
 
       <StickyBar>
+        {/* 버튼에 "Fit Pass"까지 넣으면 좁은 화면에서 한쪽만 두 줄로 접힌다.
+            공통 맥락은 캡션으로 올리고 버튼에는 선택지만 남긴다. */}
+        <p className="sticky-caption">매장 체험(Fit Pass) 요청</p>
         <div className="btn-row">
           <button type="button" className="btn btn-ghost" onClick={() => setPassTarget('selected')}>
-            지금 가방으로 Fit Pass
+            지금 가방으로
           </button>
           <button
             type="button"
             className="btn btn-primary"
             onClick={() => setPassTarget('alternative')}
           >
-            대안으로 Fit Pass
+            대안으로
           </button>
         </div>
       </StickyBar>

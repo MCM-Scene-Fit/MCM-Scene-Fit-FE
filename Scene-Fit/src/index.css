@@ -1309,13 +1309,24 @@ p {
   right: 0;
   bottom: 0;
   z-index: 20;
-  padding: 12px var(--page-pad) calc(16px + env(safe-area-inset-bottom));
-  background: linear-gradient(transparent, var(--paper) 28%);
+  /* 위로 스크롤돼 올라오는 글자가 버튼 뒤로 비쳐 보이면 깨진 화면처럼 읽힌다.
+     페이드 구간을 길게 잡아 서서히 사라지게 하고, 버튼이 닿는 아래쪽은 완전히 덮는다. */
+  padding: 28px var(--page-pad) calc(16px + env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, var(--paper) 22%, var(--paper));
 }
 
 .sticky-bar__inner {
   width: min(var(--page-max), 100%);
   margin: 0 auto;
+}
+
+.sticky-caption {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  text-align: center;
 }
 
 .btn-row {
