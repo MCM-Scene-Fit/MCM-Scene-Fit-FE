@@ -5,7 +5,8 @@ export const MOBILITY = ['indoor', 'light-walk', 'long-walk'] as const
 export type Mobility = (typeof MOBILITY)[number]
 
 export const WEAR_STYLES = ['tote', 'shoulder', 'crossbody', 'backpack'] as const
-export type WearStyle = (typeof WEAR_STYLES)[number]
+export type CatalogWearStyle = (typeof WEAR_STYLES)[number]
+export type WearStyle = CatalogWearStyle | 'long-strap'
 
 export const ITEM_CATEGORIES = ['tech', 'beauty', 'drink', 'everyday'] as const
 export type ItemCategory = (typeof ITEM_CATEGORIES)[number]
@@ -73,6 +74,7 @@ export type Product = {
   sizeLabel: string
   wearStyles: WearStyle[]
   strapAdjustable: boolean
+  hasLongStrap: boolean
   officialStorage: ItemId[]
   likelyStorage: ItemId[]
   pockets: number

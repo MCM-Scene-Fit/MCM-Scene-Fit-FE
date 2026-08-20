@@ -182,14 +182,14 @@ p {
 .brand-lockup {
   display: inline-flex;
   align-items: center;
-  gap: 0.28em;
-  height: clamp(28px, 3.2vw, 36px);
+  gap: 0.34em;
+  height: clamp(32px, 3.6vw, 42px);
   user-select: none;
 }
 
 .brand-lockup.is-compact {
-  height: 22px;
-  gap: 0.2em;
+  height: 28px;
+  gap: 0.3em;
 }
 
 .brand-lockup__part {
@@ -206,9 +206,9 @@ p {
 
 .brand-lockup__c-img {
   position: absolute;
-  left: 21.6%;
-  top: 50%;
-  height: 118%;
+  left: 22.6%;
+  top: 46%;
+  height: 112%;
   width: auto;
   transform: translateY(-50%);
   pointer-events: none;
@@ -231,11 +231,12 @@ p {
 
 .step-header--catalog h1 {
   font-family: 'Wanted Sans Variable', 'Pretendard', sans-serif;
-  font-size: 64px;
+  font-size: clamp(32px, 5vw, 64px);
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.15;
   letter-spacing: -0.04em;
   color: #614831;
+  max-width: 18em;
 }
 
 .home h1 {

@@ -5,7 +5,7 @@ import { BackButton } from './BackButton'
 import { BrandLogo } from './BrandLogo'
 
 type StepHeaderProps = {
-  step: number
+  step?: number
   title: string
   caption?: string
   backTo?: string
@@ -19,10 +19,10 @@ export function StepHeader({
   caption,
   backTo,
   onBack,
-  variant = 'flow',
+  variant = 'catalog',
 }: StepHeaderProps) {
   const navigate = useNavigate()
-  const catalog = variant === 'catalog'
+  const catalog = variant !== 'flow'
   const current = catalog ? undefined : FLOW_STEPS.find((item) => item.step === step)
 
   const goBack = () => {
