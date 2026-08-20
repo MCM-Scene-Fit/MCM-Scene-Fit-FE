@@ -2,27 +2,34 @@
 
 MCM SCENE FIT의 프론트엔드 앱입니다. 기획·기능 명세는 저장소 루트 [README.md](../../README.md), 백엔드 계약은 [API.md](./API.md)를 참고하세요.
 
-> 현재 단계: **P0 화면 흐름 완료 / Carry Check 4단계 완료 / P1 수납 시각화(2D·3D) 완료 / Fit Pass 티켓·상태 데모 완료 / 백엔드 연동 전(로컬 목업)**  
-> 기준일: 2026-08-19
+> 현재 단계: **P0 화면 흐름 완료 / Carry Check 완료 / P1 수납 시각화 완료 / Fit Pass 완료 / 백엔드 연동(실패 시 로컬 폴백) / 카탈로그·미리보기 UI 정리**  
+> 기준일: 2026-08-20
 
 ---
 
 ## 현재 개발 정도
 
-제품 선택 → 착용 미리보기 → 조건 입력(위저드) → Fit Check 결과 → 비교 → Store Fit Pass까지 **P0 화면 흐름은 연결**되어 있습니다. Scene Fit Card의 Carry Check는 가방 공식 수납·치수와 소지품 스펙(크기 프리셋 포함)을 대조해 4단계 배지와 수납 지표 점수를 보여 줍니다. 결과 화면에서는 선택한 소지품을 가방 안에 **2D 단면 / 3D 실루엣**으로 옮겨 볼 수 있습니다. 착용 미리보기는 공식 제품 이미지 2D 오버레이를 기준으로, 기기 안에서 자세·사람 마스크를 읽어 실제 치수 비율로 가방을 올립니다. 서버 API는 아직 붙이지 않았고, 제품·Fit Check·Fit Pass는 모두 프론트 로컬에서 동작합니다.
+제품 선택 → 착용 미리보기 → 조건 입력(위저드) → Fit Check 결과 → 비교 → Store Fit Pass까지 **P0 화면 흐름은 연결**되어 있습니다. 카탈로그·미리보기·이후 단계는 SCENE FIT 카탈로그 헤더(뒤로 + 로고, MCM 워드마크 없음)로 맞춰 두었습니다.
+
+Scene Fit Card의 Carry Check는 가방 공식 수납·치수와 소지품 스펙(크기 프리셋 포함)을 대조해 4단계 배지와 수납 지표 점수를 보여 줍니다. 결과 화면에서는 선택한 소지품을 가방 안에 **2D 단면 / 3D 실루엣**으로 옮겨 볼 수 있습니다.
+
+착용 미리보기는 공식 정면 컷을 사람(실루엣 또는 업로드 사진) 위에 올리고, 키 입력으로 실제 치수 비율을 맞춥니다. 착용 위치 칩은 없으며, 가방은 **직접 드래그**합니다. 정면 컷이 손잡이·스트랩을 포함해 세로로 긴 경우에도 가방 너비가 공식 가로 치수에 맞도록 상자를 잡습니다.
+
+백엔드는 `VITE_API_BASE_URL`로 카탈로그·세션·Fit Check·추천·Fit Pass를 호출하고, 실패하거나 `VITE_API_MOCK=true`이면 로컬 데이터·규칙 엔진으로 이어갑니다.
 
 | 항목 | 상태 | 비고 |
 | --- | --- | --- |
 | 기술 스택 확정 | 완료 | React 19, TypeScript, Vite 8, React Router 7, Zustand, Three.js, Framer Motion |
-| 개발 환경 | 완료 | `dev` / `build` / `lint` |
+| 개발 환경 | 완료 | `dev` / `build` / `lint`. Vercel 배포. `.env`는 커밋하지 않음 |
 | 라우팅 · 화면 흐름 | 완료 | 홈 · 추천 · 제품 · 미리보기 · 조건 · 결과 · 비교 · Fit Pass |
-| 제품 데이터 · UI | 완료 | 공식몰 검수 P0 가방 10개(정면·옆면 컷), 착용·색상·가격 필터, 색상 스위처 |
-| P0 서비스 기능 | 완료 | 조건 위저드·Carry Check 4단계·Fit Card·비교·Fit Pass. 미리보기 촬영 가이드만 남음 |
+| 제품 데이터 · UI | 완료 | 공식몰 검수 P0 10개(정면·옆면 컷), 형태·색상·가격 필터, 1·2·4열 레이아웃 |
+| P0 서비스 기능 | 완료 | 조건 위저드·Carry Check 4단계·Fit Card·비교·Fit Pass |
 | Carry Check Engine | 완료 | 공식 수납 / 치수 85%·100% 임계 / 수납 지표 점수·품목 배지 / 기기 크기 프리셋 |
 | 수납 시각화 (P1) | 완료 | 결과 화면 2D·3D 배치, 드래그·회전, 겹침·가방 밖 표시. 생성형 적재 아님 |
-| Store Fit Pass | 완료 | 매장·체험 선택, 결과/비교 모달 신청, 디지털 티켓, 요청→확인 중→확인 완료 데모 |
-| API 명세 | 완료 | [API.md](./API.md) v1.2 — 프론트 타입과 enum 맞춤 |
-| 백엔드 연동 | 미착수 | Zustand + `src/data` 목업만 사용. 세션·Fit Check·Fit Pass API 미연결 |
+| Store Fit Pass | 완료 | 매장·체험 선택, 결과/비교 모달 신청, 디지털 티켓. 서버 접수 + 로컬 데모 폴백 |
+| API 명세 | 완료 | [API.md](./API.md) |
+| 백엔드 연동 | 연결 | `src/api` + 카탈로그/세션 스토어. 실패 시 로컬 목업 |
+| UI 톤 | 진행 | 카탈로그 헤더·Wanted Sans·필터 칩·결과 노트 카드. 촬영 가이드는 남음 |
 | P1 나머지 / P2 | 미착수 | 옷 색상 매칭, 배경 프리셋, 재고 연동, 생성형 착용 |
 
 ---
@@ -41,7 +48,7 @@ MCM SCENE FIT의 프론트엔드 앱입니다. 기획·기능 명세는 저장�
 | 모션     | Framer Motion (2D 수납 드래그)                                            |
 | 린트     | ESLint 10 (`typescript-eslint`, `react-hooks`, `react-refresh`)           |
 
-백엔드 구현·재고 연동·클라우드 생성형 착용은 아직 없습니다. API 계약만 [API.md](./API.md)에 정리되어 있습니다. 전신 사진 분석은 **브라우저(기기) 안**에서만 수행합니다.
+백엔드 재고 연동·클라우드 생성형 착용은 아직 없습니다. 전신 사진 분석은 **브라우저(기기) 안**에서만 수행합니다. API는 [API.md](./API.md) 계약으로 호출하며, 서버가 없거나 실패하면 로컬 규칙으로 이어갑니다.
 
 ---
 
@@ -51,18 +58,18 @@ MCM SCENE FIT의 프론트엔드 앱입니다. 기획·기능 명세는 저장�
 
 | 기능 | 상태 | 비고 |
 | --- | --- | --- |
-| 제품 선택 | 완료 | 착용 방식·색상·가격 필터, 공식 사양 카드, 제품 1개 선택 |
+| 제품 선택 | 완료 | 형태·색상·가격 필터, 1·2·4열, 공식 사양 카드, 제품 1개 선택 |
 | 장면·조건 입력 | 완료 | 필수 4단계 위저드 + 소지품 카탈로그·카테고리 칩·기기 크기 프리셋·간이 부피/무게 |
-| 착용 미리보기 | 대부분 완료 | 온디바이스 자세·마스크·비율 합성은 동작. 촬영 가이드·나쁜 사진 경고는 남음 |
+| 착용 미리보기 | 대부분 완료 | 공식 컷 오버레이, 키 비율, 남/여 실루엣, 드래그 이동. 촬영 가이드·나쁜 사진 경고는 남음 |
 | Scene Fit Card | 완료 | Scene Match / Carry Check / Rewear, 티켓형 카드, 수납 지표 점수, 품목별 4단계 배지, 대안 1개 |
 | Carry Check Engine | 완료 | 공식 수납 우선, 축 점유율 85%/100% 판정, 점수 평균(100·80·50·0), 프리셋 치수 반영 |
 | 수납 시각화 | 완료 (P1) | 2D 단면 + 3D 실루엣, 자동 배치·드래그·회전, 부피 겹침·가방 밖 카운트 |
 | 대안 제품 비교 | 완료 | 선택 제품 vs 대안을 동일 세 축·수납 점수·4단계 태그·가격으로 비교 |
-| Store Fit Pass | 완료 | 매장·시간·체험 선택. 결과/비교에서 모달로도 신청. 티켓 + 상태 데모 |
+| Store Fit Pass | 완료 | 매장·시간·체험 선택. 결과/비교에서 모달로도 신청. 티켓 + 서버 접수/로컬 폴백 |
 | 매장 확인 상태 | 완료 (P1) | `요청` → `확인 중` → `확인 완료` 타임라인. 실시간 재고 없음 |
-| 추천 진입 | 완료 | 조건 선입력 후 후보 최대 3개 (보조 흐름, P1이지만 화면은 구현됨) |
+| 추천 진입 | 완료 | 조건 선입력 후 후보 최대 3개 (서버 추천 우선, 실패 시 로컬) |
 | 60초 빠른 체험 | 완료 | 대표 가방·실루엣·여행 조건으로 `/result` 바로 진입 |
-| 백엔드 API | 명세만 | [API.md](./API.md). 호출 코드 없음 |
+| 백엔드 API | 연결 | [API.md](./API.md). 세션·카탈로그·Fit Check·추천·Fit Pass. 목업 전환 `VITE_API_MOCK` |
 
 P1 나머지(옷 색상 매칭, 배경 프리셋)와 P2(재고 연동, 생성형 가상 착용 등)는 미착수입니다. 규칙 기반 수납 **판정**은 P0, 가방 안 **배치 그림**은 P1로 완료했습니다. 3D는 공식 정면·옆면 컷으로 몸통 실루엣을 만든 시각화이며, 물리 시뮬이나 생성형 적재가 아닙니다.
 
@@ -70,7 +77,7 @@ P1 나머지(옷 색상 매칭, 배경 프리셋)와 P2(재고 연동, 생성형
 
 ## Carry Check Engine
 
-`/result` Scene Fit Card — 가방 스펙(공식 수납 품목, 가로/세로/폭)과 선택한 소지품 스펙을 프론트 규칙으로 대조합니다. 서버 호출 없이 `src/lib/itemFit.ts` · `src/lib/fitCheck.ts`에서 동작합니다. 휴대전화·태블릿·노트북·보조배터리는 `src/data/itemPresets.ts` 크기를 쓰면 그 치수로 다시 판정합니다. 대표 프리셋이 아니면 공식 확인(`confirmed`)을 주지 않습니다.
+`/result` Scene Fit Card — 가방 스펙(공식 수납 품목, 가로/세로/폭)과 선택한 소지품 스펙을 대조합니다. 서버가 있으면 `POST /fit-check` 결과를 쓰고, 없거나 실패하면 `src/lib/itemFit.ts` · `src/lib/fitCheck.ts` 로컬 규칙으로 이어갑니다. 휴대전화·태블릿·노트북·보조배터리는 `src/data/itemPresets.ts` 크기를 쓰면 그 치수로 다시 판정합니다. 대표 프리셋이 아니면 공식 확인(`confirmed`)을 주지 않습니다.
 
 | 단계 | 배지 | 기준 |
 | --- | --- | --- |
@@ -106,20 +113,23 @@ P1 나머지(옷 색상 매칭, 배경 프리셋)와 P2(재고 연동, 생성형
 
 | 항목 | 내용 |
 | --- | --- |
-| 입력 전환 | 전신 사진 업로드 ↔ 키·체형 실루엣 아바타 |
+| 입력 전환 | 전신 사진 업로드 ↔ 키·체형·성별 실루엣 아바타 (기본 여성) |
 | 비율 공식 | `공식 치수 : 내 키 = 화면 가방 : 사진(또는 실루엣) 속 키` |
-| 온디바이스 분석 | MediaPipe로 자세·사람 마스크 추출 (사진 서버 미전송) |
+| 정면 컷 보정 | 손잡이·스트랩이 포함된 세로 컷은 사진 비율로 상자를 잡아, 가방 가로가 공식 너비에 맞게 보임 |
+| 온디바이스 분석 | MediaPipe로 자세·사람 마스크 추출 (사진 서버 미전송). 컷아웃 합성에 사용 |
 | 픽셀 키 | 사람 마스크 위~아래 우선, 없으면 관절(머리~발) 보조 |
-| 가방 배치 | 착용 방식별 어깨·손·허리·등(백팩) 앵커 + 드래그 미세 이동 |
-| 레이어 합성 | 원본 사진 → (백팩 시 가방) → 사람 컷아웃 → (그 외 가방) |
+| 가방 배치 | 미리보기에서 착용 위치 칩 없음. 가방을 눌러 직접 이동 |
 | 사진 비율 | 업로드 이미지 원본 가로·세로 비율 유지 (`object-fit: contain`) |
 | 모드 전환 | 사진/실루엣 가방 크기 분리 저장 — 왕복 시 크기 유지 |
 | 안내 | 키 조절 시 가방 비율이 바뀌는 이유 도움말, 매장 확인 디스클레이머 |
 
+조건 입력 위저드의 착용 방식(토트·숄더·크로스바디·백팩)은 미리보기와 별개로, Fit Check·추천에 쓰입니다. 제품 데이터에 `hasLongStrap`(공식 상세의 긴 어깨 스트랩 여부)이 있습니다.
+
 ### 의도적으로 하지 않는 것
 
-- 생성형 AI로 나를 다시 그리거나 가방을 재생성하는 것 (로고·패턴 왜곡·개인정보 리스크)
-- 사진만으로 실제 cm 키를 추정하는 것 (거리·화각 불명 → 사용자가 **내 키** 입력)
+- 생성형 AI로 나를 다시 그리거나 가방을 재생성하는 것
+- 공식 모델 착용컷으로 미리보기 화면을 대체하는 것
+- 사진만으로 실제 cm 키를 추정하는 것 (사용자가 **내 키** 입력)
 
 ### 남은 개선 후보
 
@@ -138,7 +148,7 @@ P1 나머지(옷 색상 매칭, 배경 프리셋)와 P2(재고 연동, 생성형
 | 입력 | 희망 매장(4곳 목업), 방문 시간(선택), 체험 목적, 직접 확인할 항목 |
 | 신청 위치 | `/fit-pass` 전용 화면, `/result`·`/compare` 모달 |
 | 완료 화면 | 디지털 티켓(제품·매장·체험·확인 항목, QR·바코드 장식) |
-| 상태 데모 | `요청` → `확인 중`(2.5초) → `확인 완료`(3초). 서버 폴링 없음 |
+| 상태 데모 | `요청` → `확인 중` → `확인 완료`. 서버 접수 시 발급 ID를 쓰고, 목업이면 로컬 타임라인 |
 
 ---
 
@@ -151,7 +161,7 @@ P1 나머지(옷 색상 매칭, 배경 프리셋)와 P2(재고 연동, 생성형
  └─ 60초 빠른 체험 → /result (데모 데이터)
 ```
 
-결과·비교 화면에서도 Fit Pass 모달로 바로 신청할 수 있습니다.
+홈을 제외한 카탈로그·미리보기·조건·결과·비교·Fit Pass는 SCENE FIT 카탈로그 헤더(뒤로 + 로고)를 씁니다. 결과·비교 화면에서도 Fit Pass 모달로 바로 신청할 수 있습니다.
 
 | 경로 | 화면 |
 | --- | --- |
@@ -172,7 +182,8 @@ P1 나머지(옷 색상 매칭, 배경 프리셋)와 P2(재고 연동, 생성형
 ```
 Scene-Fit/
 ├── package.json
-├── vite.config.ts
+├── vite.config.ts              # 로컬 `/v1` → VITE_API_PROXY_TARGET
+├── .env.example
 ├── public/
 │   ├── items/                  # 소지품 단색 라인 SVG
 │   └── products/               # 공식 정면·옆면 컷 (webp)
@@ -180,57 +191,42 @@ Scene-Fit/
 │   ├── README.md               # 프론트 개발 현황
 │   └── API.md                  # 백엔드 계약
 └── src/
-    ├── App.tsx                 # 라우팅
+    ├── App.tsx
     ├── main.tsx
     ├── index.css
     ├── types/
+    ├── api/                    # 세션·카탈로그·Fit Check·Fit Pass 클라이언트
     ├── data/
-    │   ├── products.ts
+    │   ├── products.ts         # P0 10개 + hasLongStrap
     │   ├── items.ts
-    │   ├── itemPresets.ts      # 기기 크기 프리셋
+    │   ├── itemPresets.ts
     │   └── labels.ts
-    ├── store/useFlowStore.ts   # Zustand 플로우 상태
+    ├── store/
+    │   ├── useFlowStore.ts
+    │   └── useCatalogStore.ts  # API 목록, 실패 시 로컬
+    ├── hooks/
+    │   ├── useAppBootstrap.ts  # 세션 생성·복원
+    │   └── useServerFit.ts     # Fit Check/비교, 실패 시 로컬
     ├── context/FlowContext.tsx
     ├── lib/
-    │   ├── fitCheck.ts         # 규칙 기반 Scene Fit (Carry 점수·4단계 문장)
+    │   ├── fitCheck.ts
     │   ├── productFilters.ts
-    │   ├── conditionsWizard.ts # 필수 4단계 위저드
-    │   ├── itemFit.ts          # 점유율·공식 수납 대조, 4단계 판정
-    │   ├── packLayout.ts       # 2D·3D AABB 배치·겹침
-    │   ├── bagSilhouette.ts    # 정면·옆면 컷 → 몸통 실루엣
-    │   ├── previewFit.ts       # 비율 환산
-    │   ├── bodyAnalysis.ts     # MediaPipe 자세·마스크
-    │   ├── wearAnchor.ts       # 착용 위치 앵커
-    │   └── fitPass.ts          # Fit Pass 제출 헬퍼
+    │   ├── conditionsWizard.ts
+    │   ├── itemFit.ts
+    │   ├── packLayout.ts
+    │   ├── bagSilhouette.ts
+    │   ├── previewFit.ts       # 키 비율 + 정면 컷 종횡비
+    │   ├── bodyAnalysis.ts
+    │   ├── wearAnchor.ts
+    │   ├── wearStyle.ts
+    │   └── fitPass.ts
     ├── components/
-    │   ├── WearPreview.tsx     # 미리보기 스테이지
-    │   ├── ConditionsWizard.tsx
-    │   ├── StorageCanvas.tsx   # 수납 2D·3D 전환
-    │   ├── PackStage3D.tsx     # Three.js 수납 스테이지
-    │   ├── FitCard.tsx         # Scene Fit 티켓 카드
-    │   ├── CompareCard.tsx
-    │   ├── FitPassForm.tsx
-    │   ├── FitPassRequestModal.tsx
-    │   ├── AxisMeter.tsx
-    │   ├── EvidenceBadge.tsx
-    │   ├── TicketMark.tsx
-    │   ├── ItemPresetRow.tsx
-    │   ├── ItemLoadSummary.tsx
-    │   ├── ProductCard.tsx
-    │   ├── ProductFilters.tsx
-    │   ├── ProductImage.tsx
-    │   ├── AppShell.tsx
-    │   └── StepHeader.tsx
+    │   ├── WearPreview.tsx
+    │   ├── BrandLogo.tsx
+    │   ├── BackButton.tsx
+    │   ├── StepHeader.tsx      # 기본 카탈로그 헤더
+    │   └── …
     └── pages/
-        ├── HomePage.tsx
-        ├── ProductsPage.tsx
-        ├── PreviewPage.tsx
-        ├── ConditionsPage.tsx
-        ├── ResultPage.tsx
-        ├── ComparePage.tsx
-        ├── FitPassPage.tsx
-        ├── FitPassDonePage.tsx
-        └── RecommendPage.tsx
 ```
 
 ---
@@ -238,6 +234,7 @@ Scene-Fit/
 ## 시작하기
 
 ```bash
+cp .env.example .env
 npm install
 npm run dev
 ```
@@ -249,6 +246,8 @@ npm run dev
 | `npm run preview` | 빌드 결과 미리보기 |
 | `npm run lint`    | ESLint 검사        |
 
+`.env`는 커밋하지 않습니다. 로컬은 `VITE_API_BASE_URL=/v1`와 `VITE_API_PROXY_TARGET`으로 백엔드를 붙입니다. Vercel에는 `VITE_API_BASE_URL=https://mcm-scene-fit-be.vercel.app/v1`처럼 **빌드 타임** 값을 넣습니다. 서버 없이 보려면 `VITE_API_MOCK=true`.
+
 착용 미리보기 첫 분석 시 MediaPipe 모델·WASM을 CDN에서 받습니다. **인터넷 연결**이 필요하며, 추론 자체는 기기에서 실행됩니다.
 
 ---
@@ -259,6 +258,6 @@ npm run dev
 2. 수납 3D·2D 배치 카피·한계 안내 다듬기
 3. 대안 추천 품질·Fit Check 카피 다듬기
 4. 행사(부스) 빠른 모드 동선·카피 정리
-5. (후속) [API.md](./API.md) 기준 백엔드 연동 — 지금은 로컬 목업
+5. 백엔드 연동 안정화 — 세션·Fit Check 실패 시 안내, 환경 변수 누락 점검
 6. (P1 나머지) 옷 색상 매칭, 배경 프리셋
 7. (P2) 실시간 재고·생성형 착용은 범위 밖
