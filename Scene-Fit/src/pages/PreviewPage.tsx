@@ -1,5 +1,6 @@
-import { useRef, type CSSProperties } from 'react'
+import { useRef, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CameraCapture } from '../components/CameraCapture'
 import { StepHeader } from '../components/StepHeader'
 import { WearPreview } from '../components/WearPreview'
 import { useFlow } from '../context/FlowContext'
@@ -11,6 +12,7 @@ import { BODY_SEXES, BUILDS } from '../types'
 export function PreviewPage() {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
+  const [cameraOpen, setCameraOpen] = useState(false)
   const {
     selectedProduct,
     selectedColorId,
@@ -19,6 +21,7 @@ export function PreviewPage() {
     body,
     bag,
     conditions,
+    conditionsReady,
     setPreviewMode,
     setPhotoUrl,
     setBody,
@@ -62,6 +65,7 @@ export function PreviewPage() {
           bag={bag}
           onBagChange={setBag}
           onUploadClick={() => inputRef.current?.click()}
+          onCameraClick={() => setCameraOpen(true)}
         />
 
         <div className="preview-controls">
@@ -93,9 +97,14 @@ export function PreviewPage() {
           />
           {previewMode === 'photo' ? (
             <>
-              <button type="button" className="text-btn" onClick={() => inputRef.current?.click()}>
-                {photoUrl ? '사진 다시 고르기' : '전신 사진 선택'}
-              </button>
+              <div className="photo-source-row">
+                <button type="button" className="text-btn" onClick={() => inputRef.current?.click()}>
+                  {photoUrl ? '사진 다시 고르기' : '전신 사진 선택'}
+                </button>
+                <button type="button" className="text-btn" onClick={() => setCameraOpen(true)}>
+                  카메라로 찍기
+                </button>
+              </div>
               <label className="slider">
                 <span>내 키 {body.heightCm} cm</span>
                 <input
@@ -160,6 +169,7 @@ export function PreviewPage() {
                   </button>
                 ))}
               </div>
+
             </>
           )}
 
@@ -198,12 +208,23 @@ export function PreviewPage() {
           <button
             type="button"
             className="btn btn-primary preview-cta"
-            onClick={() => navigate('/conditions')}
+            onClick={() => navigate(conditionsReady ? '/result' : '/conditions')}
           >
-            장면과 조건 입력하기
+            {conditionsReady ? 'Scene Fit 결과 보기' : '장면과 조건 입력하기'}
           </button>
         </div>
       </div>
+
+      {cameraOpen ? (
+        <CameraCapture
+          body={body}
+          onClose={() => setCameraOpen(false)}
+          onCapture={(file) => {
+            onUpload(file)
+            setCameraOpen(false)
+          }}
+        />
+      ) : null}
     </main>
   )
 }

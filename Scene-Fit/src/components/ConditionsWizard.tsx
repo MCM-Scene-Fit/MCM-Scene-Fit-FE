@@ -85,21 +85,21 @@ export function ConditionsWizard({
       </ol>
 
       {step === 1 ? (
-        <div className="choice-grid choice-grid-scenes">
-          {SCENES.map((scene) => (
-            <ChoiceCard
-              key={scene}
-              on={value.scene === scene}
-              icon={SCENE_ICON[scene]}
-              title={SCENE_LABEL[scene]}
-              hint={SCENE_HINT[scene]}
-              onClick={() => {
-                onChange({ scene })
-                goNextFrom(1)
-              }}
-            />
-          ))}
-        </div>
+        <>
+          <div className="choice-grid choice-grid-scenes">
+            {SCENES.map((scene) => (
+              <ChoiceCard
+                key={scene}
+                on={value.scene === scene}
+                icon={SCENE_ICON[scene]}
+                title={SCENE_LABEL[scene]}
+                hint={SCENE_HINT[scene]}
+                onClick={() => onChange({ scene })}
+              />
+            ))}
+          </div>
+          {children}
+        </>
       ) : null}
 
       {step === 2 ? (
@@ -179,7 +179,6 @@ export function ConditionsWizard({
               />
             ))}
           </div>
-          {children}
         </>
       ) : null}
     </section>

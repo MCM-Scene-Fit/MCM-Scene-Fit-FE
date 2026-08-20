@@ -15,6 +15,9 @@ export {
   postFitCheck,
   postFitCompare,
   postRecommend,
+  postSceneBackground,
+  postSceneConcept,
+  postScenePortrait,
   resetSession,
   toApiConditions,
 } from './endpoints'

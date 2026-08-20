@@ -3,6 +3,7 @@ import type {
   AxisStatus,
   BodyBuild,
   BodySex,
+  BodyType,
   EvidenceLevel,
   FitPassExperience,
   FitPassStatus,
@@ -160,6 +161,18 @@ export const BUILD_LABEL: Record<BodyBuild, string> = {
 export const BODY_SEX_LABEL: Record<BodySex, string> = {
   female: '여성',
   male: '남성',
+}
+
+export const BODY_TYPE_LABEL: Record<BodyType, string> = {
+  straight: '스트레이트',
+  wave: '웨이브',
+  natural: '내추럴',
+}
+
+export const BODY_TYPE_HINT: Record<BodyType, string> = {
+  straight: '어깨가 또렷하고 허리선이 완만함',
+  wave: '허리가 잘록하고 골반이 둥긂',
+  natural: '골격이 곧고 굴곡이 적음',
 }
 
 export function formatPrice(price: number) {

@@ -45,10 +45,11 @@ export function personHeightPx({
   personHeightRatio,
 }: PersonMeasure) {
   if (mode === 'photo' && photo && photo.naturalWidth > 0 && photo.naturalHeight > 0) {
+    // object-fit: contain 이라 clientHeight 에는 위아래 여백이 섞인다.
+    // 여백을 걷어낸 실제 사진 높이를 먼저 쓴다.
     const drawnHeight =
-      photo.clientHeight ||
       containedSize(photo.naturalWidth, photo.naturalHeight, photo.clientWidth, photo.clientHeight)
-        .height
+        .height || photo.clientHeight
     return drawnHeight * (personHeightRatio ?? PHOTO_PERSON_FILL)
   }
 

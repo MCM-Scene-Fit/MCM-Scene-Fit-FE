@@ -178,3 +178,37 @@ export function drawPersonCutout(
   }
   context.putImageData(pixels, 0, 0)
 }
+
+/**
+ * 가방 위치 계산에 어깨(11,12)·엉덩이(23,24)가 쓰인다. 이 지점이 안 보이거나,
+ * 팔을 들어 올려 어깨 위로 손목이 올라가 있으면 그 자리에 가방을 자연스럽게
+ * 못 올린다. 사후에 자세를 고치는 대신, 미리 알려서 다른 사진을 권한다.
+ */
+export function assessPoseQuality(landmarks: PoseLandmark[]): string | null {
+  const at = (index: number) => landmarks[index]
+  const visible = (point: PoseLandmark | undefined) => Boolean(point && point.visibility > 0.5)
+
+  const leftShoulder = at(11)
+  const rightShoulder = at(12)
+  const leftHip = at(23)
+  const rightHip = at(24)
+
+  if (!visible(leftShoulder) || !visible(rightShoulder)) {
+    return '양쪽 어깨가 잘 안 보여요. 몸통이 다 나오는 정면 사진이 더 정확합니다.'
+  }
+  if (!visible(leftHip) || !visible(rightHip)) {
+    return '엉덩이 쪽이 가려져 있어요. 허리 아래까지 나오는 사진이 더 정확합니다.'
+  }
+
+  const leftWrist = at(15)
+  const rightWrist = at(16)
+  const shoulderY = Math.min(leftShoulder!.y, rightShoulder!.y)
+  const armRaised = [leftWrist, rightWrist].some(
+    (wrist) => wrist && wrist.visibility > 0.5 && wrist.y < shoulderY - 0.06,
+  )
+  if (armRaised) {
+    return '팔이 어깨 위로 올라가 있어요. 팔을 자연스럽게 내린 사진이면 가방 위치가 더 자연스러워요.'
+  }
+
+  return null
+}

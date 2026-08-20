@@ -82,6 +82,7 @@ const defaultBody: BodyProfile = {
   heightCm: 165,
   build: 'standard',
   sex: 'female',
+  bodyType: 'natural',
 }
 
 const initialState: FlowState = {
