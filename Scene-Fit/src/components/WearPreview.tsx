@@ -333,6 +333,8 @@ export function WearPreview({
           height: `${bagBox.height}px`,
         }}
       >
+        {/* 가방 밑에 옅은 접촉 그림자. 없으면 몸 위에 붙여넣은 스티커처럼 보인다. */}
+        <div className="bag-layer__contact" aria-hidden="true" />
         <div
           className="bag-layer__item"
           role="button"
@@ -357,7 +359,14 @@ export function WearPreview({
     !productShowsOwnStraps && strapPoints.length > 0 && showBag ? (
       <svg className="strap-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         {strapPoints.map((point, index) => {
-          const d = `M ${point.x} ${point.y} Q ${(point.x + bag.x) / 2} ${Math.min(point.y, bag.y) - 4} ${bag.x} ${bag.y}`
+          // 팽팽하게 당겨진 천 끈이라 실제로는 거의 안 휜다. 곡률을 거리에 비례한
+          // 아주 작은 값으로 제한한다 — 고정폭(4)이면 사진마다 어깨-가방 거리가
+          // 달라져 어떤 사진에서는 과하게 늘어진 것처럼 보였다.
+          const dx = bag.x - point.x
+          const dy = bag.y - point.y
+          const distance = Math.hypot(dx, dy)
+          const bow = Math.min(2.5, distance * 0.06)
+          const d = `M ${point.x} ${point.y} Q ${(point.x + bag.x) / 2} ${Math.min(point.y, bag.y) - bow} ${bag.x} ${bag.y}`
           return (
             // 실선 하나면 그려 넣은 선처럼 보인다. 폭이 있는 어깨끈 + 가운데 하이라이트로
             // 가죽/원단 느낌의 두께감을 준다.
