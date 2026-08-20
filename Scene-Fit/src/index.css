@@ -1494,6 +1494,9 @@ p {
   height: 100%;
   overflow: visible;
   pointer-events: none;
+  /* z-index 없이 두면 .preview-cutout(2)한테 항상 가려진다 — DOM 순서와 무관하게
+     명시적 z-index가 있는 요소가 항상 이긴다. 가방(3)과 같은 층에 두고 DOM 순서로 가른다. */
+  z-index: 3;
 }
 
 .strap-layer path {

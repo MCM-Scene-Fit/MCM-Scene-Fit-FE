@@ -88,8 +88,12 @@ export function silhouetteBagAnchor(wear: WearStyle): WearAnchor {
  * 화면 퍼센트가 아니라 몸 좌표라, 키를 바꿔 몸이 커져도 같은 부위에 붙는다.
  * 값은 가방의 위쪽 가운데(.bag-layer 가 translate(-50%,0) 이므로).
  */
-const SIL_LEFT_SHOULDER: StrapPoint = { x: 58, y: 70 }
-const SIL_RIGHT_SHOULDER: StrapPoint = { x: 102, y: 70 }
+// OUTLINE_PATH(HumanSilhouette.tsx)의 실제 어깨 꼭짓점 좌표다 — "C49 96 48 75 53 62"가
+// 왼쪽 어깨 끝(53,62), 대칭인 오른쪽은 (107,62). 실루엣을 다시 그릴 때마다 여기도
+// 같이 맞춰야 한다. 이전 값(58,70)은 몸통 안쪽으로 치우쳐 있어서 끈이 어깨가 아니라
+// 목·가슴 쪽에서 시작하는 것처럼 보였다.
+const SIL_LEFT_SHOULDER: StrapPoint = { x: 53, y: 62 }
+const SIL_RIGHT_SHOULDER: StrapPoint = { x: 107, y: 62 }
 
 export const SILHOUETTE_ANCHOR_VIEW: Record<WearStyle, WearAnchor> = {
   crossbody: { x: 103, y: 124, behindPerson: false, strapPoints: [SIL_LEFT_SHOULDER] },
