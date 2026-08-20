@@ -7,28 +7,71 @@ import { ItemLoadSummary } from '../components/ItemLoadSummary'
 import { ProductMini } from '../components/ProductCard'
 import { StorageCanvas } from '../components/StorageCanvas'
 import { StepHeader, StickyBar } from '../components/StepHeader'
+import { WearPreview } from '../components/WearPreview'
 import { useFlow } from '../context/FlowContext'
+import { useSceneVisual } from '../hooks/useSceneVisual'
 import { useServerFit } from '../hooks/useServerFit'
 import { formatOccupancy } from '../lib/itemFit'
 import { useCatalogStore } from '../store/useCatalogStore'
 import type { ItemVerdict } from '../types'
 
+function SceneVisualCard({
+  destination,
+  concept,
+  place,
+  loading,
+  onEditDestination,
+}: {
+  destination: string
+  concept: string | null
+  place: string | null
+  loading: boolean
+  onEditDestination: () => void
+}) {
+  const trimmed = destination.trim()
+  if (!trimmed) return null
+  return (
+    <p className="scene-visual-caption">
+      <span className="scene-visual-destination">{trimmed}</span>
+      {loading ? <span> · 장면 만드는 중…</span> : null}
+      {!loading && concept ? <span> · {concept}</span> : null}
+      {!loading && place ? <span className="scene-visual-place">{place}</span> : null}
+      {!loading && place ? (
+        <a
+          className="scene-visual-map"
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place} ${trimmed.split(',')[0]}`)}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          지도에서 보기
+        </a>
+      ) : null}
+      <button type="button" className="scene-visual-edit" onClick={onEditDestination}>
+        바꾸기
+      </button>
+    </p>
+  )
+}
+
 function NoteCard({
   tone,
   title,
-  empty,
   items,
 }: {
   tone: 'match' | 'weak' | 'check'
   title: string
-  empty: string
   items: string[]
 }) {
+  // 할 말이 없는 카드는 아예 안 보여준다 — "불일치 없음" 카드가 세 번째 자리를 차지할
+  // 이유가 없다.
+  if (!items.length) return null
   return (
     <article className={`note-card note-card--${tone}`}>
       <h4>{title}</h4>
       <ul>
-        {items.length ? items.map((line) => <li key={line}>{line}</li>) : <li>{empty}</li>}
+        {items.map((line) => (
+          <li key={line}>{line}</li>
+        ))}
       </ul>
     </article>
   )
@@ -63,15 +106,28 @@ function VerdictTag({ verdict }: { verdict: ItemVerdict }) {
 export function ResultPage() {
   const navigate = useNavigate()
   const [passOpen, setPassOpen] = useState(false)
-  const { selectedProduct, selectedColorId, conditions, conditionsReady, startQuickDemo, setItemPreset } =
-    useFlow()
+  const {
+    selectedProduct,
+    selectedColorId,
+    conditions,
+    conditionsReady,
+    startQuickDemo,
+    setItemPreset,
+    previewMode,
+    photoUrl,
+    body,
+    bag,
+    setBag,
+  } = useFlow()
   const getCatalogProduct = useCatalogStore((state) => state.getProduct)
   const product = selectedProduct
 
   const result = useServerFit(product, conditions)
+  const sceneVisual = useSceneVisual(conditions, Boolean(photoUrl), body)
 
   if (!product || !result) return null
   const alternative = result.alternativeId ? getCatalogProduct(result.alternativeId) : null
+  const wearStyle = conditions.wearStyle ?? product.wearStyles[0]
 
   return (
     <main className="page has-sticky page-result">
@@ -88,6 +144,31 @@ export function ResultPage() {
           빠른 체험 미리보기입니다. 조건을 바꾸려면 이전 단계에서 다시 입력할 수 있습니다.
         </p>
       ) : null}
+
+      <section className="scene-visual" aria-label="장면 속 내 모습">
+        <WearPreview
+          product={product}
+          colorId={selectedColorId ?? product.colors[0].id}
+          mode={previewMode}
+          photoUrl={photoUrl}
+          body={body}
+          wearStyle={wearStyle}
+          bag={bag}
+          onBagChange={setBag}
+          onUploadClick={() => navigate('/preview')}
+          onCameraClick={() => navigate('/preview')}
+          backgroundUrl={sceneVisual.backgroundUrl}
+          portraitUrl={sceneVisual.portraitUrl}
+          sceneLoading={sceneVisual.loading}
+        />
+        <SceneVisualCard
+          destination={conditions.destination}
+          concept={sceneVisual.concept}
+          place={sceneVisual.place}
+          loading={sceneVisual.loading}
+          onEditDestination={() => navigate('/conditions')}
+        />
+      </section>
 
       {!result.allConditionsMet ? (
         <p className="empty-note">
@@ -118,24 +199,9 @@ export function ResultPage() {
       />
 
       <section className="result-notes" aria-label="결과 요약">
-        <NoteCard
-          tone="match"
-          title="이 가방을 추천하는 이유"
-          empty="선택한 조건과 강하게 겹치는 공식 근거는 아직 적습니다."
-          items={result.matches}
-        />
-        <NoteCard
-          tone="weak"
-          title="제시한 조건과 낮은 적합성"
-          empty="필수 조건에서 뚜렷한 불일치는 없습니다."
-          items={result.mismatches}
-        />
-        <NoteCard
-          tone="check"
-          title="매장에서 확인할 점"
-          empty="지금 단계에서 따로 확인할 항목은 없습니다."
-          items={result.storeChecks}
-        />
+        <NoteCard tone="match" title="이 가방을 추천하는 이유" items={result.matches} />
+        <NoteCard tone="weak" title="제시한 조건과 낮은 적합성" items={result.mismatches} />
+        <NoteCard tone="check" title="매장에서 확인할 점" items={result.storeChecks} />
       </section>
 
       {alternative ? (

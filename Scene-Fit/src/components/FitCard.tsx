@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { AXIS_CODE, AXIS_STATUS_LABEL, EVIDENCE_LABEL, formatPrice } from '../data/labels'
 import { bagImageRatio, getColor } from '../data/products'
 import { resultEvidence } from '../lib/fitCheck'
@@ -37,6 +37,37 @@ export function FitCard({
   const color = getColor(product, colorId ?? product.colors[0].id)
   const evidence: EvidenceLevel = resultEvidence(result)
   const ticketNo = passId ?? `SF-${product.sku.slice(-6)}`
+
+  const swipeRef = useRef<HTMLDivElement>(null)
+  const [activePanel, setActivePanel] = useState(0)
+
+  // 칸 사이에 gap(12px)이 있어서 scrollWidth를 칸 수로 나누면 어긋난다.
+  // 실제 자식 카드의 위치(offsetLeft)를 기준으로 계산한다.
+  const onSwipeScroll = () => {
+    const el = swipeRef.current
+    if (!el) return
+    const panels = [...el.children] as HTMLElement[]
+    let closest = 0
+    let closestDistance = Infinity
+    panels.forEach((panel, index) => {
+      const distance = Math.abs(panel.offsetLeft - el.scrollLeft)
+      if (distance < closestDistance) {
+        closestDistance = distance
+        closest = index
+      }
+    })
+    setActivePanel(closest)
+  }
+
+  const goToPanel = (index: number) => {
+    const el = swipeRef.current
+    const panel = el?.children[index] as HTMLElement | undefined
+    if (!el || !panel) return
+    // 스크롤 이벤트로 따라가지 않고 눌렀을 때 바로 반응한다 — 스와이프 애니메이션이
+    // 끝나기를 기다리면 점을 눌러도 안 바뀌는 것처럼 느껴진다.
+    setActivePanel(index)
+    el.scrollTo({ left: panel.offsetLeft, behavior: 'smooth' })
+  }
 
   return (
     <article className="fit-card" aria-label="Scene Fit Card">
@@ -88,7 +119,7 @@ export function FitCard({
           근거 수준 {EVIDENCE_LABEL[evidence]}. 단정이 아니라 확인된 범위만 보여 줍니다.
         </p>
 
-        <div className="fit-swipe" aria-label="축별 결과">
+        <div className="fit-swipe" aria-label="축별 결과" ref={swipeRef} onScroll={onSwipeScroll}>
           {AXIS_META.map((axis) => (
             <section key={axis.code} className="fit-swipe__panel">
               <div className="fit-swipe__top">
@@ -106,6 +137,20 @@ export function FitCard({
                 <p className="muted">{result.rewearPotential.detail}</p>
               ) : null}
             </section>
+          ))}
+        </div>
+
+        <div className="fit-swipe__dots" role="tablist" aria-label="축 이동">
+          {AXIS_META.map((axis, index) => (
+            <button
+              key={axis.code}
+              type="button"
+              role="tab"
+              aria-selected={index === activePanel}
+              aria-label={`${axis.name} 보기`}
+              className={index === activePanel ? 'is-active' : ''}
+              onClick={() => goToPanel(index)}
+            />
           ))}
         </div>
       </div>

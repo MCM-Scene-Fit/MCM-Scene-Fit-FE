@@ -6,7 +6,7 @@ export const HEIGHT_MAX_CM = 190
 export const SILHOUETTE_VIEW = {
   width: 160,
   height: 280,
-  figure: 239,
+  figure: 236,
 } as const
 
 /** 사진 높이 대비 사람(머리~발) 세로 비율. 마스크·관절 분석 결과. */
@@ -45,10 +45,11 @@ export function personHeightPx({
   personHeightRatio,
 }: PersonMeasure) {
   if (mode === 'photo' && photo && photo.naturalWidth > 0 && photo.naturalHeight > 0) {
+    // object-fit: contain 이라 clientHeight 에는 위아래 여백이 섞인다.
+    // 여백을 걷어낸 실제 사진 높이를 먼저 쓴다.
     const drawnHeight =
-      photo.clientHeight ||
       containedSize(photo.naturalWidth, photo.naturalHeight, photo.clientWidth, photo.clientHeight)
-        .height
+        .height || photo.clientHeight
     return drawnHeight * (personHeightRatio ?? PHOTO_PERSON_FILL)
   }
 

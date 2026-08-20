@@ -28,10 +28,23 @@ const IMAGE_SIZE: Record<string, readonly [number, number]> = {
   MYZGATA01CO001: [720, 373],
 }
 
+/** 착용 미리보기용 몸통 크롭. 목록 카드는 끈이 있는 원본을 쓴다. */
+const BODY_IMAGE_SIZE: Record<string, readonly [number, number]> = {
+  MMTGATA01BK001: [713, 528],
+  MMVGATT01BK001: [712, 451],
+  MMVGATT01CO001: [711, 450],
+  MWHESTA01CO001: [708, 517],
+  MWPGSLR02CO001: [603, 701],
+  MWPGSLR02I8001: [607, 706],
+  MWSGATA01BK001: [700, 311],
+  MWSGATA01I8001: [702, 312],
+}
+
 const SIDE_IMAGE_SIZE = [2000, 2164] as const
 
 function swatch(id: string, name: string, hex: string, sku: string): ProductColor {
   const [imageWidth, imageHeight] = IMAGE_SIZE[sku]
+  const body = BODY_IMAGE_SIZE[sku]
   return {
     id,
     name,
@@ -40,6 +53,13 @@ function swatch(id: string, name: string, hex: string, sku: string): ProductColo
     image: `/products/${sku}.webp`,
     imageWidth,
     imageHeight,
+    ...(body
+      ? {
+          bodyImage: `/products/${sku}_body.webp`,
+          bodyImageWidth: body[0],
+          bodyImageHeight: body[1],
+        }
+      : {}),
     sideImage: `/products/${sku}_side.webp`,
     sideImageWidth: SIDE_IMAGE_SIZE[0],
     sideImageHeight: SIDE_IMAGE_SIZE[1],

@@ -1,4 +1,12 @@
 import { FilesetResolver, PoseLandmarker, type MPMask } from '@mediapipe/tasks-vision'
+import {
+  bilinearSampler,
+  buildAlphaMap,
+  gradeTowardScene,
+  sceneToneFromPixels,
+  stripFloorHalo,
+  type SceneTone,
+} from './personMask'
 
 export type PoseLandmark = {
   x: number
@@ -152,6 +160,10 @@ export function drawPersonCutout(
   canvas: HTMLCanvasElement,
   image: HTMLImageElement,
   mask: PersonMask,
+  /** 배경 톤. 주면 인물 색감을 그 장면에 맞춘다. */
+  tone?: SceneTone | null,
+  /** 발 위치(0~1). 이보다 아래는 바닥 그림자로 보고 지운다. */
+  footYNorm?: number | null,
 ) {
   const maxWidth = 720
   const scale = Math.min(1, maxWidth / Math.max(image.naturalWidth, 1))
@@ -166,15 +178,74 @@ export function drawPersonCutout(
   const pixels = context.getImageData(0, 0, width, height)
   const { data, width: maskWidth, height: maskHeight } = mask
 
+  const alphaMap = buildAlphaMap(data, maskWidth, maskHeight)
+  const sample = bilinearSampler(alphaMap, maskWidth, maskHeight)
+
   for (let y = 0; y < height; y += 1) {
-    const maskY = Math.min(maskHeight - 1, Math.floor((y / height) * maskHeight))
+    const fy = ((y + 0.5) / height) * maskHeight - 0.5
     for (let x = 0; x < width; x += 1) {
-      const maskX = Math.min(maskWidth - 1, Math.floor((x / width) * maskWidth))
-      const coverage = data[maskY * maskWidth + maskX] ?? 0
-      const alpha = coverage > 0.55 ? 1 : coverage > 0.25 ? (coverage - 0.25) / 0.3 : 0
+      const alpha = sample(((x + 0.5) / width) * maskWidth - 0.5, fy)
       const index = (y * width + x) * 4 + 3
       pixels.data[index] = Math.round(pixels.data[index] * alpha)
     }
   }
+  stripFloorHalo(pixels.data, width, height, footYNorm)
+  if (tone) gradeTowardScene(pixels.data, tone)
   context.putImageData(pixels, 0, 0)
+}
+
+/** 배경 이미지에서 톤을 뽑는다. 다른 도메인 이미지라 읽기가 막히면 null. */
+export async function readSceneTone(url: string): Promise<SceneTone | null> {
+  try {
+    const image = new Image()
+    image.crossOrigin = 'anonymous'
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve()
+      image.onerror = () => reject(new Error('배경 이미지를 읽지 못했습니다'))
+      image.src = url
+    })
+    const canvas = document.createElement('canvas')
+    canvas.width = 48
+    canvas.height = 48
+    const context = canvas.getContext('2d', { willReadFrequently: true })
+    if (!context) return null
+    context.drawImage(image, 0, 0, 48, 48)
+    return sceneToneFromPixels(context.getImageData(0, 0, 48, 48).data)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 가방 위치 계산에 어깨(11,12)·엉덩이(23,24)가 쓰인다. 이 지점이 안 보이거나,
+ * 팔을 들어 올려 어깨 위로 손목이 올라가 있으면 그 자리에 가방을 자연스럽게
+ * 못 올린다. 사후에 자세를 고치는 대신, 미리 알려서 다른 사진을 권한다.
+ */
+export function assessPoseQuality(landmarks: PoseLandmark[]): string | null {
+  const at = (index: number) => landmarks[index]
+  const visible = (point: PoseLandmark | undefined) => Boolean(point && point.visibility > 0.5)
+
+  const leftShoulder = at(11)
+  const rightShoulder = at(12)
+  const leftHip = at(23)
+  const rightHip = at(24)
+
+  if (!visible(leftShoulder) || !visible(rightShoulder)) {
+    return '양쪽 어깨가 잘 안 보여요. 몸통이 다 나오는 정면 사진이 더 정확합니다.'
+  }
+  if (!visible(leftHip) || !visible(rightHip)) {
+    return '엉덩이 쪽이 가려져 있어요. 허리 아래까지 나오는 사진이 더 정확합니다.'
+  }
+
+  const leftWrist = at(15)
+  const rightWrist = at(16)
+  const shoulderY = Math.min(leftShoulder!.y, rightShoulder!.y)
+  const armRaised = [leftWrist, rightWrist].some(
+    (wrist) => wrist && wrist.visibility > 0.5 && wrist.y < shoulderY - 0.06,
+  )
+  if (armRaised) {
+    return '팔이 어깨 위로 올라가 있어요. 팔을 자연스럽게 내린 사진이면 가방 위치가 더 자연스러워요.'
+  }
+
+  return null
 }
