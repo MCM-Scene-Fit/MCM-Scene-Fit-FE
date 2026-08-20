@@ -319,6 +319,7 @@ export function WearPreview({
               svgRef={silhouetteRef}
               heightCm={body.heightCm}
               build={body.build}
+              sex={body.sex}
             />
             {bagNode}
           </div>
@@ -329,7 +330,7 @@ export function WearPreview({
             <span>이 기기에서 자세를 읽어, 가방을 어깨·손·허리에 올립니다.</span>
           </button>
         ) : null}
-        <p className="preview-sticker">미리보기입니다</p>
+        <p className="preview-sticker">미리보기</p>
       </div>
       {status === 'fallback' ? (
         <p className="preview-hint">자세를 찾지 못했습니다. 가방을 직접 옮겨 주세요.</p>
@@ -349,33 +350,50 @@ function SilhouetteAvatar({
   svgRef,
   heightCm,
   build,
+  sex,
 }: {
   svgRef: Ref<SVGSVGElement>
   heightCm: number
   build: BodyProfile['build']
+  sex: BodyProfile['sex']
 }) {
   const widthScale = build === 'slim' ? 0.82 : build === 'broad' ? 1.18 : 1
   const heightScale = heightCm / HEIGHT_MAX_CM
+  const female = sex === 'female'
 
   return (
     <svg
       ref={svgRef}
       viewBox="0 0 160 280"
       preserveAspectRatio="xMidYMid meet"
-      className="silhouette"
+      className={`silhouette${female ? ' is-female' : ' is-male'}`}
       aria-hidden="true"
     >
       <ellipse cx="80" cy="268" rx="36" ry="6" className="silhouette-ground" />
       <g
         transform={`translate(80 262) scale(${widthScale} ${heightScale}) translate(-80 -262)`}
       >
-        <ellipse cx="80" cy="34" rx="17" ry="19" />
-        <rect x="74" y="50" width="12" height="12" rx="4" />
-        <path d="M54 66c-2 18-4 48 2 78h48c6-30 4-60 2-78-8-8-36-8-52 0Z" />
-        <path d="M54 74c-14 12-22 42-20 70 4 3 10 0 10-8 0-24 6-48 16-60Z" />
-        <path d="M106 74c14 12 22 42 20 70-4 3-10 0-10-8 0-24-6-48-16-60Z" />
-        <path d="M62 144 54 254h16l8-110Z" />
-        <path d="M98 144 106 254H90l-8-110Z" />
+        {female ? (
+          <>
+            <ellipse cx="80" cy="33" rx="15" ry="17" />
+            <rect x="75.5" y="47" width="9" height="16" rx="4" />
+            <path d="M58 64C56 80 68 90 71 102C74 116 62 128 60 144h40C98 128 86 116 89 102C92 90 104 80 102 64c-8-8-32-8-44 0Z" />
+            <path d="M58 72c-12 14-17 38-15 62 3 3 8 0 8-7 0-18 5-40 13-52Z" />
+            <path d="M102 72c12 14 17 38 15 62-3 3-8 0-8-7 0-18-5-40-13-52Z" />
+            <path d="M64 144 57 254h14l5-110Z" />
+            <path d="M96 144 103 254H89l-5-110Z" />
+          </>
+        ) : (
+          <>
+            <ellipse cx="80" cy="34" rx="17" ry="19" />
+            <rect x="74" y="50" width="12" height="12" rx="4" />
+            <path d="M54 66c-2 18-4 48 2 78h48c6-30 4-60 2-78-8-8-36-8-52 0Z" />
+            <path d="M54 74c-14 12-22 42-20 70 4 3 10 0 10-8 0-24 6-48 16-60Z" />
+            <path d="M106 74c14 12 22 42 20 70-4 3-10 0-10-8 0-24-6-48-16-60Z" />
+            <path d="M62 144 54 254h16l8-110Z" />
+            <path d="M98 144 106 254H90l-8-110Z" />
+          </>
+        )}
       </g>
     </svg>
   )

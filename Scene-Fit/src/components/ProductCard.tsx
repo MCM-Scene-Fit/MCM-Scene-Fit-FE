@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { formatPrice, WEAR_LABEL } from '../data/labels'
 import { bagCardScale, bagImageRatio, getColor } from '../data/products'
+import { useCatalogStore } from '../store/useCatalogStore'
 import type { Product } from '../types'
 import { ProductImage } from './ProductImage'
 
@@ -8,6 +9,7 @@ type ProductCardProps = {
   product: Product
   selected?: boolean
   colorId?: string
+  variant?: 'default' | 'catalog'
   onSelect: (productId: string, colorId?: string) => void
 }
 
@@ -15,13 +17,22 @@ export function ProductCard({
   product,
   selected,
   colorId,
+  variant = 'default',
   onSelect,
 }: ProductCardProps) {
+  const catalog = useCatalogStore((state) => state.products)
   const activeColorId = colorId ?? product.colors[0].id
   const color = getColor(product, activeColorId)
+  const catalogLayout = variant === 'catalog'
+  const dims =
+    product.widthMm && product.heightMm && product.depthMm
+      ? `${product.sizeLabel} · ${product.widthMm / 10} × ${product.heightMm / 10} × ${product.depthMm / 10} cm · ${product.sku}`
+      : `${product.sizeLabel}${product.sku ? ` · ${product.sku}` : ''}`
 
   return (
-    <article className={`product-card ${selected ? 'is-selected' : ''}`}>
+    <article
+      className={`product-card${catalogLayout ? ' product-card--catalog' : ''}${selected ? ' is-selected' : ''}`}
+    >
       {selected ? <span className="product-card__badge">선택됨</span> : null}
 
       <button
@@ -33,7 +44,7 @@ export function ProductCard({
           className="product-card__visual"
           style={
             {
-              '--bag-scale': String(bagCardScale(product)),
+              '--bag-scale': String(bagCardScale(product, catalog)),
               '--bag-ratio': bagImageRatio(product, activeColorId),
             } as CSSProperties
           }
@@ -45,13 +56,14 @@ export function ProductCard({
         <div className="product-card__body">
           <p className="eyebrow">{product.category}</p>
           <h3>{product.name}</h3>
-          <p className="muted">
-            {product.sizeLabel} · {product.widthMm / 10} × {product.heightMm / 10} ×{' '}
-            {product.depthMm / 10} cm · {product.sku}
-          </p>
-          <p className="product-card__wear">
-            {product.wearStyles.map((wear) => WEAR_LABEL[wear]).join(' · ')}
-          </p>
+          {catalogLayout ? null : (
+            <>
+              <p className="muted">{dims}</p>
+              <p className="product-card__wear">
+                {product.wearStyles.map((wear) => WEAR_LABEL[wear]).join(' · ')}
+              </p>
+            </>
+          )}
           <p className="price">{formatPrice(product.price)}</p>
         </div>
       </button>
@@ -68,14 +80,16 @@ export function ProductCard({
           />
         ))}
         <span className="muted">{color.name}</span>
-        <a
-          className="text-link product-card__official"
-          href={product.officialUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
-          공식 상세
-        </a>
+        {product.officialUrl ? (
+          <a
+            className="text-link product-card__official"
+            href={product.officialUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            공식 상세
+          </a>
+        ) : null}
       </div>
     </article>
   )

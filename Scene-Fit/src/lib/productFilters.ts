@@ -20,7 +20,7 @@ export const COLOR_FILTERS = [
 export const PRICE_FILTERS = [
   { id: 'all', label: '전체' },
   { id: 'under-100', label: '100만 미만', min: 0, max: 999999 },
-  { id: '100-130', label: '100–130만', min: 1000000, max: 1300000 },
+  { id: '100-130', label: '100~130만', min: 1000000, max: 1300000 },
   { id: 'over-130', label: '130만 이상', min: 1300001, max: Number.POSITIVE_INFINITY },
 ] as const
 

@@ -2,6 +2,7 @@ import { CARRY_ITEMS } from './items'
 import type {
   AxisStatus,
   BodyBuild,
+  BodySex,
   EvidenceLevel,
   FitPassExperience,
   FitPassStatus,
@@ -154,6 +155,11 @@ export const BUILD_LABEL: Record<BodyBuild, string> = {
   slim: '슬림',
   standard: '스탠다드',
   broad: '볼륨',
+}
+
+export const BODY_SEX_LABEL: Record<BodySex, string> = {
+  female: '여성',
+  male: '남성',
 }
 
 export function formatPrice(price: number) {

@@ -1,11 +1,13 @@
 import { useFlow } from '../context/FlowContext'
-import { EXPERIENCE_LABEL, STORES } from '../data/labels'
+import { EXPERIENCE_LABEL } from '../data/labels'
+import { useCatalogStore } from '../store/useCatalogStore'
 import type { FitPassExperience } from '../types'
 
 const EXPERIENCES = Object.keys(EXPERIENCE_LABEL) as FitPassExperience[]
 
 export function FitPassFields() {
   const { fitPass, setFitPass, toggleExperience } = useFlow()
+  const stores = useCatalogStore((state) => state.stores)
 
   return (
     <div className="stack form-grid">
@@ -17,7 +19,7 @@ export function FitPassFields() {
           onChange={(event) => setFitPass({ storeId: event.target.value })}
         >
           <option value="">매장을 선택하세요</option>
-          {STORES.map((store) => (
+          {stores.map((store) => (
             <option key={store.id} value={store.id}>
               {store.name}
             </option>

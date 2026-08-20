@@ -1,35 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { CompareCard } from '../components/CompareCard'
 import { FitPassRequestModal } from '../components/FitPassRequestModal'
 import { StepHeader, StickyBar } from '../components/StepHeader'
 import { useFlow } from '../context/FlowContext'
-import { getProduct } from '../data/products'
-import { runFitCheck } from '../lib/fitCheck'
+import { useServerCompare } from '../hooks/useServerFit'
 
 export function ComparePage() {
   const [passTarget, setPassTarget] = useState<'selected' | 'alternative' | null>(null)
   const { selectedProduct, selectedColorId, conditions } = useFlow()
   const selected = selectedProduct
+  const compared = useServerCompare(selected, conditions)
 
-  const result = useMemo(() => {
-    if (!selected) return null
-    return runFitCheck(selected, conditions)
-  }, [selected, conditions])
-
-  const alternative = result?.alternativeId ? getProduct(result.alternativeId) : null
-  const altResult = useMemo(() => {
-    if (!alternative) return null
-    return runFitCheck(alternative, conditions)
-  }, [alternative, conditions])
-
-  if (!selected || !result || !alternative || !altResult) {
+  if (!selected || !compared.selected || !compared.alternative) {
     return (
       <main className="page">
         <StepHeader step={5} title="비교" backTo="/result" />
-        <p className="empty-note">비교할 대안 제품이 없습니다. 결과 화면으로 돌아가 주세요.</p>
+        <p className="empty-note">
+          {compared.message ?? '비교할 대안 제품이 없습니다. 결과 화면으로 돌아가 주세요.'}
+        </p>
       </main>
     )
   }
+
+  const { product: alternative, result: altResult } = compared.alternative
+  const result = compared.selected
 
   return (
     <main className="page has-sticky">
@@ -78,6 +72,7 @@ export function ComparePage() {
             : (selectedColorId ?? undefined)
         }
         storeChecks={passTarget === 'alternative' ? altResult.storeChecks : result.storeChecks}
+        alternativeId={passTarget === 'alternative' ? selected.id : alternative.id}
         onClose={() => setPassTarget(null)}
       />
     </main>

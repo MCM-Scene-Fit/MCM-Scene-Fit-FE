@@ -118,12 +118,12 @@ function rewearStatus(positive: boolean): AxisStatus {
   return positive ? 'match' : 'weak'
 }
 
-function findAlternative(product: Product, conditions: Conditions) {
+function findAlternative(product: Product, conditions: Conditions, catalog: Product[]) {
   const wear = conditions.wearStyle
   const items = conditions.items
   const scene = conditions.scene
 
-  const ranked = PRODUCTS.filter((candidate) => candidate.id !== product.id)
+  const ranked = catalog.filter((candidate) => candidate.id !== product.id)
     .map((candidate) => {
       let score = 0
       if (wear && candidate.wearStyles.includes(wear)) score += 4
@@ -138,7 +138,11 @@ function findAlternative(product: Product, conditions: Conditions) {
   return ranked[0]?.score > 0 ? ranked[0].candidate.id : null
 }
 
-export function runFitCheck(product: Product, conditions: Conditions): FitResult {
+export function runFitCheck(
+  product: Product,
+  conditions: Conditions,
+  catalog: Product[] = PRODUCTS,
+): FitResult {
   const scene = conditions.scene
   const scenePositive = Boolean(scene && product.sceneTags.includes(scene))
   const sceneMatch = {
@@ -228,13 +232,15 @@ export function runFitCheck(product: Product, conditions: Conditions): FitResult
   }
 
   return {
+    productId: product.id,
     sceneMatch,
     carryCheck,
     rewearPotential,
     matches: matches.slice(0, 3),
     mismatches: mismatches.slice(0, 3),
     storeChecks: storeChecks.slice(0, 3),
-    alternativeId: findAlternative(product, conditions),
+    alternativeId: findAlternative(product, conditions, catalog),
+    allConditionsMet: mismatches.length === 0,
   }
 }
 
